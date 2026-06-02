@@ -1,8 +1,8 @@
- // Login//
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -11,81 +11,191 @@ import { auth } from "../../services/firebase";
 function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState("");
 
   const navigate = useNavigate();
 
+  // 🔐 auto login
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigate("/dashboard");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   async function cadastrar() {
+    setLoading(true);
+    setErro("");
+
     try {
-      const usuario = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        senha
-      );
-
-      alert("Usuário criado com sucesso!");
-      console.log(usuario.user);
-
+      await createUserWithEmailAndPassword(auth, email, senha);
+      navigate("/dashboard");
     } catch (erro) {
-      console.error(erro);
-      alert(erro.message);
+      setErro(erro.message);
+    } finally {
+      setLoading(false);
     }
   }
 
   async function entrar() {
+    setLoading(true);
+    setErro("");
+
     try {
-      const usuario = await signInWithEmailAndPassword(
-        auth,
-        email,
-        senha
-      );
-
+      await signInWithEmailAndPassword(auth, email, senha);
       navigate("/dashboard");
-      console.log(usuario.user);
-
     } catch (erro) {
-      console.error(erro);
-      alert(erro.code);
+      setErro("Email ou senha inválidos");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div>
-      <h1>Agenda Inteligente</h1>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>Agenda Inteligente</h1>
+        <p style={styles.subtitle}>Organize seus clientes e horários</p>
 
-      <br />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={styles.input}
+          onFocus={(e) =>
+            (e.target.style.border = "1px solid #4A6FFF")
+          }
+          onBlur={(e) =>
+            (e.target.style.border = "1px solid #e5e7eb")
+          }
+        />
 
-      <input
-        type="email"
-        placeholder="Digite seu email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <input
+          type="password"
+          placeholder="Senha"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          style={styles.input}
+          onFocus={(e) =>
+            (e.target.style.border = "1px solid #4A6FFF")
+          }
+          onBlur={(e) =>
+            (e.target.style.border = "1px solid #e5e7eb")
+          }
+        />
 
-      <br />
-      <br />
+        {erro && <p style={styles.error}>{erro}</p>}
 
-      <input
-        type="password"
-        placeholder="Digite sua senha"
-        value={senha}
-        onChange={(e) => setSenha(e.target.value)}
-      />
+        {/* 👇 BOTÕES AGRUPADOS CORRETAMENTE */}
+        <div style={styles.buttonGroup}>
+          <button
+            onClick={entrar}
+            style={styles.primaryButton}
+            disabled={loading}
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
 
-      <br />
-      <br />
-         
-      <button onClick={entrar}>
-        Entrar
-      </button>
-
-      <br />
-      <br />
-
-      <button onClick={cadastrar}>
-        Criar Conta
-      </button>
+          <button
+            onClick={cadastrar}
+            style={styles.secondaryButton}
+            disabled={loading}
+          >
+            {loading ? "Criando..." : "Criar Conta"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    background: "#F4F7FF",
+    fontFamily: "Arial",
+  },
+
+  card: {
+    width: "100%",
+    maxWidth: 380,
+    padding: 30,
+    borderRadius: 14,
+    background: "#fff",
+    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+    textAlign: "center",
+  },
+
+  title: {
+    fontSize: 22,
+    marginBottom: 5,
+    color: "#1f2937",
+    fontWeight: "700",
+  },
+
+  subtitle: {
+    fontSize: 13,
+    marginBottom: 25,
+    color: "#6b7280",
+  },
+
+  input: {
+    width: "100%",
+    padding: 14,
+    marginBottom: 12,
+    borderRadius: 10,
+    border: "1px solid #e5e7eb",
+    fontSize: 16,
+    backgroundColor: "#ffffff",
+    color: "#111827",
+    outline: "none",
+  },
+
+  buttonGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 12, // 👈 substitui marginBottom
+    marginTop: 10,
+  },
+
+  primaryButton: {
+    width: "100%",
+    padding: 14,
+    background: "#4A6FFF",
+    color: "#fff",
+    border: "none",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+
+  secondaryButton: {
+    width: "100%",
+    padding: 14,
+    background: "#EEF2FF",
+    color: "#4A6FFF",
+    border: "none",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+
+  error: {
+    color: "#ef4444",
+    fontSize: 12,
+    marginBottom: 10,
+  },
+};
 
 export default Login;
