@@ -5,6 +5,7 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
 
 import { db, auth } from "../../services/firebase";
@@ -17,6 +18,9 @@ function Clientes() {
 
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [email, setEmail] = useState("");
+  const [observacoes, setObservacoes] = useState("");
+  const [editandoId, setEditandoId] = useState(null);
 
   const navigate = useNavigate();
 
@@ -51,16 +55,44 @@ function Clientes() {
   async function adicionarCliente() {
     if (!nome || !telefone) return;
 
-    await addDoc(collection(db, "clientes"), {
-      nome,
-      telefone,
-      createdAt: new Date(),
-    });
+await addDoc(collection(db, "clientes"), {
+  nome,
+  telefone,
+  email,
+  observacoes,
+  createdAt: new Date(),
+});
 
-    setNome("");
-    setTelefone("");
+setNome("");
+setTelefone("");
+setEmail("");
+setObservacoes("");
   }
+  function editarCliente(cliente) {
+  setEditandoId(cliente.id);
 
+  setNome(cliente.nome || "");
+  setTelefone(cliente.telefone || "");
+  setEmail(cliente.email || "");
+  setObservacoes(cliente.observacoes || "");
+}
+async function salvarEdicao() {
+  if (!editandoId) return;
+
+  await updateDoc(doc(db, "clientes", editandoId), {
+    nome,
+    telefone,
+    email,
+    observacoes,
+  });
+
+  setEditandoId(null);
+
+  setNome("");
+  setTelefone("");
+  setEmail("");
+  setObservacoes("");
+}
   // ❌ deletar cliente
   async function deletarCliente(id) {
     await deleteDoc(doc(db, "clientes", id));
@@ -90,12 +122,28 @@ function Clientes() {
           style={styles.input}
         />
 
-        <button onClick={adicionarCliente} style={styles.button}>
-          Adicionar
-        </button>
-      </div>
+        <input
+  placeholder="Email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  style={styles.input}
+/>
 
-      {/* LISTA */}
+<textarea
+  placeholder="Observações"
+  value={observacoes}
+  onChange={(e) => setObservacoes(e.target.value)}
+  style={styles.input}
+/>
+
+    <button
+  onClick={editandoId ? salvarEdicao : adicionarCliente}
+  style={styles.button}
+>
+  {editandoId ? "Salvar Alterações" : "Adicionar"}
+</button>
+      </div>
+              {/* LISTA */}
       <div>
         {clientes.length === 0 ? (
           <p>Nenhum cliente cadastrado</p>
@@ -104,12 +152,23 @@ function Clientes() {
             <div key={c.id} style={styles.card}>
               <div>
                 <b>{c.nome}</b>
+
                 <p>{c.telefone}</p>
+
+                {c.email && <p>{c.email}</p>}
+
+                {c.observacoes && <p>{c.observacoes}</p>}
               </div>
 
-              <button onClick={() => deletarCliente(c.id)}>
-                Excluir
-              </button>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button onClick={() => editarCliente(c)}>
+                  Editar
+                </button>
+
+                <button onClick={() => deletarCliente(c.id)}>
+                  Excluir
+                </button>
+              </div>
             </div>
           ))
         )}
@@ -151,4 +210,4 @@ const styles = {
   },
 };
 
-export default Clientes;
+export default Clientes; 
