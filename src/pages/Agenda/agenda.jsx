@@ -3,6 +3,9 @@ import {
   collection,
   addDoc,
   onSnapshot,
+  updateDoc,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
 
 import { db } from "../../services/firebase";
@@ -18,6 +21,9 @@ function Agenda() {
   const [dataSelecionada, setDataSelecionada] = useState("");
   const [titulo, setTitulo] = useState("");
   const [clienteSelecionado, setClienteSelecionado] = useState("");
+  const [valor, setValor] = useState("");
+  const [hora, setHora] = useState("");
+const [editandoId, setEditandoId] = useState(null);
 
   // 🔥 AGENDAMENTOS
   useEffect(() => {
@@ -62,7 +68,11 @@ function Agenda() {
     return {
       dia,
       data: dataFormatada,
-      eventos: agendamentos.filter((a) => a.data === dataFormatada),
+      eventos: agendamentos
+  .filter((a) => a.data === dataFormatada)
+  .sort((a, b) =>
+    (a.hora || "").localeCompare(b.hora || "")
+  ),
     };
   });
 
@@ -73,22 +83,93 @@ function Agenda() {
 
   // 🟢 abrir modal
   function abrirModal(data) {
+    setEditandoId(null);
     setDataSelecionada(data);
     setTitulo("");
     setClienteSelecionado("");
+    setValor("");
+    setHora("");
     setOpen(true);
+    
   }
+function editarAgendamento(evento) {
+  setEditandoId(evento.id);
+
+  setDataSelecionada(evento.data);
+  setTitulo(evento.titulo || "");
+  setClienteSelecionado(evento.cliente || "");
+  setValor(evento.valor || "");
+  setHora(evento.hora || "");
+
+  setOpen(true);
+}
+async function salvarEdicao() {
+  if (!editandoId) return;
+const conflito = agendamentos.some(
+  (a) =>
+    a.id !== editandoId &&
+    a.data === dataSelecionada &&
+    a.hora === hora
+);
+
+if (conflito) {
+  alert("Já existe um atendimento neste horário.");
+  return;
+}
+await updateDoc(doc(db, "agendamentos", editandoId), {
+  titulo,
+  cliente: clienteSelecionado,
+  data: dataSelecionada,
+  hora,
+  valor: Number(valor),
+});
+
+  setEditandoId(null);
+
+  setTitulo("");
+  setClienteSelecionado("");
+  setValor("");
+  setOpen(false);
+}
+async function excluirAgendamento() {
+  if (!editandoId) return;
+
+  const confirmar = window.confirm(
+    "Deseja realmente excluir este agendamento?"
+  );
+
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "agendamentos", editandoId));
+
+  setEditandoId(null);
+  setTitulo("");
+  setClienteSelecionado("");
+  setValor("");
+  setOpen(false);
+}
 
   // 💾 salvar agendamento
   async function salvar() {
     if (!titulo || !clienteSelecionado) return;
+  const horarioOcupado = agendamentos.some(
+  (a) =>
+    a.data === dataSelecionada &&
+    a.hora === hora
+);
 
-    await addDoc(collection(db, "agendamentos"), {
-      titulo,
-      cliente: clienteSelecionado,
-      data: dataSelecionada,
-      createdAt: new Date(),
-    });
+if (horarioOcupado) {
+  alert("Já existe um atendimento neste horário.");
+  return;
+}
+ await addDoc(collection(db, "agendamentos"), {
+  titulo,
+  cliente: clienteSelecionado,
+  data: dataSelecionada,
+  hora,
+  valor: Number(valor),
+  createdAt: new Date(),
+});
 
     setOpen(false);
     setTitulo("");
@@ -122,12 +203,29 @@ function Agenda() {
             <div style={styles.dayNumber}>{d.dia}</div>
 
             {d.eventos.map((ev) => (
-              <div key={ev.id} style={styles.event}>
-                <b>{ev.titulo}</b>
-                <div style={styles.client}>{ev.cliente}</div>
-              </div>
-            ))}
+  <div
+  key={ev.id}
+  style={styles.event}
+  onClick={(e) => {
+    e.stopPropagation();
+    editarAgendamento(ev);
+  }}
+>
+    <b>{ev.titulo}</b>
+
+    <div style={styles.client}>
+      {ev.cliente}
+    </div>
+<div style={styles.client}>
+  {ev.hora}
+</div>
+    <div style={styles.client}>
+      R$ {ev.valor || 0}
+    </div>
+  </div>
+))}
           </div>
+          
         ))}
       </div>
 
@@ -145,7 +243,19 @@ function Agenda() {
               onChange={(e) => setTitulo(e.target.value)}
               style={styles.input}
             />
-
+            <input
+  type="number"
+  placeholder="Valor do serviço"
+  value={valor}
+  onChange={(e) => setValor(e.target.value)}
+  style={styles.input}
+/>
+<input
+  type="time"
+  value={hora}
+  onChange={(e) => setHora(e.target.value)}
+  style={styles.input}
+/>
             {/* CLIENTE */}
             <select
               value={clienteSelecionado}
@@ -161,9 +271,24 @@ function Agenda() {
               ))}
             </select>
 
-            <button onClick={salvar} style={styles.button}>
-              Salvar
-            </button>
+           <button
+  onClick={editandoId ? salvarEdicao : salvar}
+  style={styles.button}
+>
+  {editandoId ? "Salvar Alterações" : "Salvar"}
+</button>
+{editandoId && (
+  <button
+    onClick={excluirAgendamento}
+    style={{
+      ...styles.button,
+      marginTop: 10,
+      background: "#d32f2f",
+    }}
+  >
+    Excluir Agendamento
+  </button>
+)}
           </div>
         </div>
       )}

@@ -1,22 +1,15 @@
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import {
-  collection,
-  onSnapshot,
-  addDoc,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, onSnapshot } from "firebase/firestore";
 
 import { auth, db } from "../../services/firebase";
 
 function Dashboard() {
   const [user, setUser] = useState(null);
   const [clientes, setClientes] = useState([]);
-  const [nome, setNome] = useState("");
-  const [telefone, setTelefone] = useState("");
+  const [agendamentos, setAgendamentos] = useState([]);
 
-  // 🔐 Verifica usuário logado
+  // 🔐 AUTH
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -25,186 +18,243 @@ function Dashboard() {
     return () => unsubscribe();
   }, []);
 
-  // 📦 Buscar clientes em tempo real
+  // 👥 CLIENTES
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "clientes"), (snapshot) => {
-      const lista = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setClientes(lista);
+      setClientes(
+        snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+      );
     });
 
     return () => unsubscribe();
   }, []);
 
-  // ➕ Adicionar cliente
-  const handleAddCliente = async () => {
-    if (!nome || !telefone) return;
-
-    await addDoc(collection(db, "clientes"), {
-      nome,
-      telefone,
-      createdAt: new Date(),
+  // 📅 AGENDAMENTOS
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "agendamentos"), (snapshot) => {
+      setAgendamentos(
+        snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+      );
     });
 
-    setNome("");
-    setTelefone("");
-  };
+    return () => unsubscribe();
+  }, []);
 
-  // ❌ Deletar cliente
-  const handleDelete = async (id) => {
-    await deleteDoc(doc(db, "clientes", id));
-  };
+  // =========================
+  // 📊 MÉTRICAS
+  // =========================
 
-  // 🚪 Logout
-  const handleLogout = async () => {
-    await signOut(auth);
-  };
+  const hoje = new Date().toISOString().split("T")[0];
+
+  const agendamentosHoje = agendamentos.filter((a) => a.data === hoje);
+
+  const faturamentoHoje = agendamentosHoje.reduce(
+    (t, a) => t + (a.valor || 0),
+    0
+  );
+
+  const mesAtual = new Date().getMonth();
+  const anoAtual = new Date().getFullYear();
+
+  const agendamentosMes = agendamentos.filter((a) => {
+    const data = new Date(a.data);
+    return (
+      data.getMonth() === mesAtual &&
+      data.getFullYear() === anoAtual
+    );
+  });
+
+  const faturamentoMes = agendamentosMes.reduce(
+    (t, a) => t + (a.valor || 0),
+    0
+  );
+
+  const ticketMedio =
+    agendamentosMes.length > 0
+      ? faturamentoMes / agendamentosMes.length
+      : 0;
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Dashboard</h1>
+      <h2 style={styles.title}>Dashboard</h2>
 
-      {user && (
-        <div style={styles.userBox}>
-          <p>Logado como: <b>{user.email}</b></p>
-          <button onClick={handleLogout} style={styles.logoutButton}>
-            Sair
-          </button>
-          <button
-    onClick={() => navigate("/clientes")}
-    style={{
-      marginTop: 10,
-      padding: 8,
-      background: "#2196F3",
-      color: "#fff",
-      border: "none",
-      borderRadius: 6,
-      cursor: "pointer",
-    }}
-  >
-    Ir para Clientes
-  </button>
+      {/* =========================
+          📊 CARDS PREMIUM (COMPACTOS)
+      ========================= */}
+      <div style={styles.metricsGrid}>
+        <div style={styles.card}>
+          <p style={styles.cardTitle}>Hoje</p>
+          <h3 style={styles.cardValue}>
+            R$ {faturamentoHoje.toFixed(2)}
+          </h3>
         </div>
-      )}
 
-      {/* ➕ Cadastro de clientes */}
-      <div style={styles.formBox}>
-        <h2>Adicionar Cliente</h2>
+        <div style={styles.card}>
+          <p style={styles.cardTitle}>Mês</p>
+          <h3 style={styles.cardValue}>
+            R$ {faturamentoMes.toFixed(2)}
+          </h3>
+        </div>
 
-        <input
-          placeholder="Nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          style={styles.input}
-        />
+        <div style={styles.card}>
+          <p style={styles.cardTitle}>Atendimentos</p>
+          <h3 style={styles.cardValue}>
+            {agendamentosHoje.length}
+          </h3>
+        </div>
 
-        <input
-          placeholder="Telefone"
-          value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
-          style={styles.input}
-        />
+        <div style={styles.card}>
+          <p style={styles.cardTitle}>Clientes</p>
+          <h3 style={styles.cardValue}>
+            {clientes.length}
+          </h3>
+        </div>
 
-        <button onClick={handleAddCliente} style={styles.addButton}>
-          Salvar Cliente
-        </button>
+        <div style={styles.card}>
+          <p style={styles.cardTitle}>Ticket Médio</p>
+          <h3 style={styles.cardValue}>
+            R$ {ticketMedio.toFixed(2)}
+          </h3>
+        </div>
       </div>
 
-      {/* 📋 Lista de clientes */}
-      <div style={styles.listBox}>
-        <h2>Clientes</h2>
+      {/* =========================
+          📅 AGENDA DO DIA
+      ========================= */}
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>📅 Hoje</h3>
 
-        {clientes.length === 0 ? (
-          <p>Nenhum cliente cadastrado</p>
+        {agendamentosHoje.length === 0 ? (
+          <p style={{ opacity: 0.5, fontSize: 13 }}>
+            Nenhum agendamento hoje
+          </p>
         ) : (
-          clientes.map((c) => (
-            <div key={c.id} style={styles.card}>
-              <div>
-                <b>{c.nome}</b>
-                <p>{c.telefone}</p>
-              </div>
+          agendamentosHoje
+            .sort((a, b) => (a.hora > b.hora ? 1 : -1))
+            .map((a) => (
+              <div key={a.id} style={styles.agendaItem}>
+                <div>
+                  <b>{a.nomeCliente || "Cliente"}</b>
+                  <p style={styles.agendaSub}>
+                    {a.hora} • {a.servico || "Serviço"}
+                  </p>
+                </div>
 
-              <button
-                onClick={() => handleDelete(c.id)}
-                style={styles.deleteButton}
-              >
-                Excluir
-              </button>
-            </div>
-          ))
+                <span style={styles.valor}>
+                  R$ {a.valor || 0}
+                </span>
+              </div>
+            ))
         )}
       </div>
+
+      {/* =========================
+          👤 USER (SÓ INFO)
+      ========================= */}
+      {user && (
+        <div style={styles.footer}>
+          <p style={styles.footerText}>
+            {user.email}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
 const styles = {
   container: {
-    padding: 20,
+    padding: 14,
     fontFamily: "Arial",
     background: "#f5f7fb",
     minHeight: "100vh",
   },
+
   title: {
-    marginBottom: 20,
-  },
-  userBox: {
-    marginBottom: 20,
-    padding: 10,
-    background: "#fff",
-    borderRadius: 8,
-  },
-  logoutButton: {
-    padding: 8,
-    background: "#ff4d4d",
-    color: "#fff",
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer",
-  },
-  formBox: {
-    padding: 15,
-    background: "#fff",
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  input: {
-    display: "block",
-    width: "100%",
-    padding: 10,
     marginBottom: 10,
-    borderRadius: 6,
-    border: "1px solid #ccc",
   },
-  addButton: {
-    padding: 10,
-    background: "#4CAF50",
-    color: "#fff",
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer",
+
+  // 📊 GRID COMPACTO
+metricsGrid: {
+  display: "grid",
+  gridTemplateColumns: "repeat(2, 1fr)", // 🔥 3 por linha (mais compacto)
+  gap: 8,
+  marginBottom: 12,
+},
+
+  // 🟦 CARD PREMIUM PEQUENO
+card: {
+  background: "#fff",
+  borderRadius: 10,
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+
+  padding: 30,
+
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+
+  textAlign: "center",
+
+  minHeight: 70, // 🔥 mantém compacto
+},
+
+  cardTitle: {
+    fontSize: 11,
+    color: "#777",
+    marginBottom: 4,
   },
-  listBox: {
-    padding: 15,
+
+  cardValue: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#111",
+  },
+
+  // 📅 AGENDA
+  section: {
     background: "#fff",
-    borderRadius: 8,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 10,
   },
-  card: {
+
+  sectionTitle: {
+    marginBottom: 8,
+  },
+
+  agendaItem: {
     display: "flex",
     justifyContent: "space-between",
-    padding: 10,
+    padding: 8,
     borderBottom: "1px solid #eee",
   },
-  deleteButton: {
-    background: "#ff4d4d",
-    color: "#fff",
-    border: "none",
-    padding: 8,
-    borderRadius: 6,
-    cursor: "pointer",
+
+  agendaSub: {
+    fontSize: 12,
+    opacity: 0.6,
+  },
+
+  valor: {
+    fontWeight: "bold",
+    color: "#4CAF50",
+  },
+
+  footer: {
+    marginTop: 15,
+    textAlign: "center",
+  },
+
+  footerText: {
+    fontSize: 11,
+    opacity: 0.5,
   },
 };
 
