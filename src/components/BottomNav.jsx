@@ -18,11 +18,6 @@ function BottomNav() {
         <span>Agenda</span>
       </button>
 
-      <button onClick={() => navigate("/clientes")} style={styles.btn(isActive("/clientes"))}>
-        👤
-        <span>Clientes</span>
-      </button>
-
       <button onClick={() => navigate("/equipe")} style={styles.btn(isActive("/equipe"))}>
         👥
         <span>Equipe</span>

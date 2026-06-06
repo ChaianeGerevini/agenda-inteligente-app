@@ -11,11 +11,13 @@ import {
 import { db } from "../../services/firebase";
 
 function Agenda() {
+  const [mostrarDia, setMostrarDia] = useState(false);
+  const [agendaDia, setAgendaDia] = useState("");
   const [agendamentos, setAgendamentos] = useState([]);
   const [clientes, setClientes] = useState([]);
 
   const [mesAtual, setMesAtual] = useState(new Date());
-
+  const [visualizacao, setVisualizacao] = useState("mes");
   // modal
   const [open, setOpen] = useState(false);
   const [dataSelecionada, setDataSelecionada] = useState("");
@@ -23,7 +25,7 @@ function Agenda() {
   const [clienteSelecionado, setClienteSelecionado] = useState("");
   const [valor, setValor] = useState("");
   const [hora, setHora] = useState("");
-const [editandoId, setEditandoId] = useState(null);
+  const [editandoId, setEditandoId] = useState(null);
 
   // 🔥 AGENDAMENTOS
   useEffect(() => {
@@ -58,24 +60,33 @@ const [editandoId, setEditandoId] = useState(null);
 
   const diasNoMes = new Date(ano, mes + 1, 0).getDate();
 
-  const dias = Array.from({ length: diasNoMes }, (_, i) => {
-    const dia = i + 1;
+/*Array From - nao mexer*/ 
 
-    const dataFormatada = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(
-      dia
-    ).padStart(2, "0")}`;
+const dias = Array.from({ length: diasNoMes }, (_, i) => {
+  const dia = i + 1;
 
-    return {
-      dia,
-      data: dataFormatada,
-      eventos: agendamentos
-  .filter((a) => a.data === dataFormatada)
+  const dataFormatada = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(
+    dia
+  ).padStart(2, "0")}`;
+
+  return {
+    dia,
+    data: dataFormatada,
+    eventos: agendamentos
+      .filter((a) => a.data === dataFormatada)
+      .sort((a, b) =>
+        (a.hora || "").localeCompare(b.hora || "")
+      ),
+  };
+}); 
+    /*Array From*/ 
+
+
+const eventosDia = agendamentos
+  .filter((a) => a.data === agendaDia)
   .sort((a, b) =>
     (a.hora || "").localeCompare(b.hora || "")
-  ),
-    };
-  });
-
+  );
   function mudarMes(delta) {
     const nova = new Date(ano, mes + delta, 1);
     setMesAtual(nova);
@@ -176,29 +187,91 @@ if (horarioOcupado) {
     setClienteSelecionado("");
   }
 
-  return (
-    <div style={styles.container}>
-      {/* HEADER */}
-      <div style={styles.header}>
-        <button onClick={() => mudarMes(-1)}>◀</button>
+return (
+  <div style={styles.container}>
+<div style={styles.header}>
+  <button
+    style={styles.monthButton}
+    onClick={() => mudarMes(-1)}
+  >
+    ◀
+  </button>
 
-        <h2>
-          {mesAtual.toLocaleString("pt-BR", {
-            month: "long",
-            year: "numeric",
-          })}
-        </h2>
+  <h2>
+    {mesAtual.toLocaleString("pt-BR", {
+      month: "long",
+      year: "numeric",
+    })}
+  </h2>
 
-        <button onClick={() => mudarMes(1)}>▶</button>
-      </div>
+  <button
+    style={styles.monthButton}
+    onClick={() => mudarMes(1)}
+  >
+    ▶
+  </button>
+</div>
+    <div style={styles.viewSelector}>
+  <button
+    style={{
+      ...styles.viewButton,
+      ...(visualizacao === "mes"
+        ? styles.viewButtonActive
+        : {}),
+    }}
+    onClick={() => setVisualizacao("mes")}
+  >
+    Mês
+  </button>
 
+  <button
+    style={{
+      ...styles.viewButton,
+      ...(visualizacao === "semana"
+        ? styles.viewButtonActive
+        : {}),
+    }}
+    onClick={() => setVisualizacao("semana")}
+  >
+    Semana
+  </button>
+
+  <button
+    style={{
+      ...styles.viewButton,
+      ...(visualizacao === "dia"
+        ? styles.viewButtonActive
+        : {}),
+    }}
+    onClick={() => setVisualizacao("dia")}
+  >
+    Dia
+  </button>
+</div>
       {/* CALENDÁRIO */}
-      <div style={styles.grid}>
-        {dias.map((d) => (
+     <div style={styles.grid}>
+  {(visualizacao === "mes"
+    ? dias
+    : visualizacao === "semana"
+    ? dias.filter((_, i) => {
+        const hoje = new Date().getDate();
+        return (
+          i + 1 >= hoje &&
+          i + 1 < hoje + 7
+        );
+      })
+    : dias.filter(
+        (d) =>
+          d.dia === new Date().getDate()
+      )
+  ).map((d) => (
           <div
             key={d.data}
             style={styles.day}
-            onClick={() => abrirModal(d.data)}
+            onClick={() => {
+  setAgendaDia(d.data);
+  setMostrarDia(true);
+}}
           >
             <div style={styles.dayNumber}>{d.dia}</div>
 
@@ -211,17 +284,21 @@ if (horarioOcupado) {
     editarAgendamento(ev);
   }}
 >
-    <b>{ev.titulo}</b>
-
-    <div style={styles.client}>
-      {ev.cliente}
-    </div>
-<div style={styles.client}>
-  {ev.hora}
+<div style={{ fontWeight: 700 }}>
+  💇 {ev.titulo}
 </div>
-    <div style={styles.client}>
-      R$ {ev.valor || 0}
-    </div>
+
+<div style={styles.client}>
+  👤 {ev.cliente}
+</div>
+
+<div style={styles.client}>
+  🕒 {ev.hora}
+</div>
+
+<div style={styles.client}>
+  💰 R$ {ev.valor || 0}
+</div>
   </div>
 ))}
           </div>
@@ -230,10 +307,59 @@ if (horarioOcupado) {
       </div>
 
       {/* MODAL */}
+    {mostrarDia && (
+  <div
+    style={styles.modalOverlay}
+    onClick={() => setMostrarDia(false)}
+  >
+    <div
+      style={styles.modal}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h3>📅 Agenda do Dia</h3>
+
+      <p>{agendaDia}</p>
+
+      {eventosDia.length === 0 && (
+        <p>Nenhum atendimento.</p>
+      )}
+
+      {eventosDia.map((ev) => (
+        <div
+          key={ev.id}
+          style={styles.eventCard}
+          onClick={() => editarAgendamento(ev)}
+        >
+          <strong>🕒 {ev.hora}</strong>
+
+          <div>👤 {ev.cliente}</div>
+
+          <div>💇 {ev.titulo}</div>
+
+          <div>💰 R$ {ev.valor}</div>
+        </div>
+      ))}
+
+      <button
+        style={styles.fabDay}
+        onClick={() => {
+          setMostrarDia(false);
+          abrirModal(agendaDia);
+        }}
+      >
+        +
+      </button>
+    </div>
+  </div>
+)}
       {open && (
         <div style={styles.modalOverlay} onClick={() => setOpen(false)}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h3>📅 Novo agendamento</h3>
+            <h3>
+  {editandoId
+    ? "✏️ Editar Agendamento"
+    : "📅 Novo Agendamento"}
+</h3>
             <p>{dataSelecionada}</p>
 
             {/* SERVIÇO */}
@@ -257,19 +383,14 @@ if (horarioOcupado) {
   style={styles.input}
 />
             {/* CLIENTE */}
-            <select
-              value={clienteSelecionado}
-              onChange={(e) => setClienteSelecionado(e.target.value)}
-              style={styles.input}
-            >
-              <option value="">Selecione o cliente</option>
+         <input
+  type="text"
+  placeholder="Nome do cliente"
+  value={clienteSelecionado}
+  onChange={(e) => setClienteSelecionado(e.target.value)}
+  style={styles.input}
+/>
 
-              {clientes.map((c) => (
-                <option key={c.id} value={c.nome}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
 
            <button
   onClick={editandoId ? salvarEdicao : salvar}
@@ -292,97 +413,217 @@ if (horarioOcupado) {
           </div>
         </div>
       )}
+
+      <button
+  style={styles.fab}
+  onClick={() => {
+    const hoje = new Date()
+      .toISOString()
+      .split("T")[0];
+
+    abrirModal(hoje);
+  }}
+>
+  +
+</button>
     </div>
   );
 }
 
 const styles = {
   container: {
-    padding: 20,
-    paddingBottom: 90,
-    fontFamily: "Arial",
+    padding: 16,
+    paddingBottom: 100,
+    background: "#f5f7fb",
+    minHeight: "100vh",
+    fontFamily: "Inter, Arial, sans-serif",
   },
 
+  // HEADER
   header: {
     display: "flex",
     justifyContent: "space-between",
-    marginBottom: 20,
     alignItems: "center",
+    marginBottom: 16,
+    background: "#fff",
+    padding: "12px 16px",
+    borderRadius: 16,
+    boxShadow: "0 4px 12px rgba(0,0,0,.05)",
   },
 
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(7, 1fr)",
-    gap: 8,
+  monthButton: {
+    border: "none",
+    background: "#eef2ff",
+    color: "#4A6FFF",
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    cursor: "pointer",
+    fontWeight: "bold",
   },
+
+  // BOTÕES MÊS / SEMANA / DIA
+  viewSelector: {
+    display: "flex",
+    background: "#fff",
+    padding: 5,
+    borderRadius: 14,
+    marginBottom: 16,
+    boxShadow: "0 4px 12px rgba(0,0,0,.05)",
+  },
+
+  viewButton: {
+    flex: 1,
+    border: "none",
+    padding: 12,
+    borderRadius: 10,
+    background: "transparent",
+    cursor: "pointer",
+    fontWeight: 600,
+    color: "#666",
+    transition: ".2s",
+  },
+
+  viewButtonActive: {
+    background: "#4A6FFF",
+    color: "#fff",
+    boxShadow: "0 4px 10px rgba(74,111,255,.3)",
+  },
+
+grid: {
+  display: "grid",
+  gridTemplateColumns: "repeat(7, 1fr)",
+  gap: 8,
+
+},
 
   day: {
-    minHeight: 90,
-    border: "1px solid #eee",
-    borderRadius: 10,
-    padding: 6,
+    minHeight: 100,
     background: "#fff",
+    borderRadius: 16,
+    padding: 8,
     cursor: "pointer",
+    boxShadow: "0 2px 8px rgba(0,0,0,.04)",
+    transition: ".2s",
   },
 
   dayNumber: {
-    fontWeight: "bold",
-    marginBottom: 5,
+    fontWeight: 700,
+    fontSize: 14,
+    color: "#111827",
+    marginBottom: 6,
   },
 
+  // EVENTO
   event: {
-    background: "#4A6FFF",
-    color: "#fff",
-    padding: "3px 4px",
-    borderRadius: 4,
-    fontSize: 10,
-    marginBottom: 2,
-    overflow: "hidden",
+    background: "#EEF2FF",
+    borderLeft: "4px solid #4A6FFF",
+    color: "#111827",
+    padding: 6,
+    borderRadius: 8,
+    marginBottom: 4,
+    fontSize: 11,
   },
 
   client: {
-    fontSize: 9,
-    opacity: 0.9,
+    fontSize: 10,
+    color: "#666",
   },
 
+  // MODAL
   modalOverlay: {
     position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: "rgba(0,0,0,0.4)",
+    inset: 0,
+    background: "rgba(0,0,0,.5)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 999,
   },
 
   modal: {
     background: "#fff",
+    width: "90%",
+    maxWidth: 400,
+    borderRadius: 24,
     padding: 20,
-    borderRadius: 10,
-    width: 320,
+    boxShadow: "0 10px 30px rgba(0,0,0,.15)",
   },
 
   input: {
     width: "100%",
-    padding: 12,
-    marginTop: 10,
+    padding: 14,
+    marginTop: 8,
     marginBottom: 10,
-    border: "1px solid #ddd",
-    borderRadius: 8,
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
     fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
   },
 
   button: {
     width: "100%",
-    padding: 12,
+    padding: 14,
+    border: "none",
+    borderRadius: 14,
     background: "#4A6FFF",
     color: "#fff",
-    border: "none",
-    borderRadius: 8,
+    fontWeight: 600,
+    fontSize: 15,
     cursor: "pointer",
+    marginTop: 10,
   },
+
+  deleteButton: {
+    width: "100%",
+    padding: 14,
+    border: "none",
+    borderRadius: 14,
+    background: "#EF4444",
+    color: "#fff",
+    fontWeight: 600,
+    cursor: "pointer",
+    marginTop: 10,
+  },
+
+  // BOTÃO FLUTUANTE
+  fab: {
+    position: "fixed",
+    padding: 10,
+    bottom: 90,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: "50%",
+    border: "none",
+    background: "#4A6FFF",
+    color: "#fff",
+    fontSize: 30,
+    cursor: "pointer",
+    boxShadow: "0 10px 25px rgba(74,111,255,.4)",
+    zIndex: 1000,
+  },
+  eventCard: {
+  background: "#fff",
+  border: "1px solid #eee",
+  borderRadius: 12,
+  padding: 12,
+  marginBottom: 10,
+  cursor: "pointer",
+},
+
+fabDay: {
+  width: 60,
+  height: 60,
+  borderRadius: "50%",
+  border: "none",
+  background: "#4A6FFF",
+  color: "#fff",
+  fontSize: 28,
+  marginTop: 20,
+  cursor: "pointer",
+},
 };
 
 export default Agenda;

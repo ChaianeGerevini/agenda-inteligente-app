@@ -6,27 +6,13 @@ import { auth, db } from "../../services/firebase";
 
 function Dashboard() {
   const [user, setUser] = useState(null);
-  const [clientes, setClientes] = useState([]);
+  const [equipe, setEquipe] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
 
   // 🔐 AUTH
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // 👥 CLIENTES
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "clientes"), (snapshot) => {
-      setClientes(
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }))
-      );
     });
 
     return () => unsubscribe();
@@ -58,7 +44,6 @@ function Dashboard() {
     (t, a) => t + (a.valor || 0),
     0
   );
-
   const mesAtual = new Date().getMonth();
   const anoAtual = new Date().getFullYear();
 
@@ -69,26 +54,33 @@ function Dashboard() {
       data.getFullYear() === anoAtual
     );
   });
-
+// Faturamento total da equipe no mês
+const faturamentoMesEquipe = agendamentosMes.reduce(
+  (total, a) => total + Number(a.valor || 0),
+  0
+);
   const faturamentoMes = agendamentosMes.reduce(
     (t, a) => t + (a.valor || 0),
     0
   );
 
-  const ticketMedio =
-    agendamentosMes.length > 0
-      ? faturamentoMes / agendamentosMes.length
-      : 0;
-
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Dashboard</h2>
+      <h2 style={styles.title}>
+        Olá, seja bem-vindo! 👋
+      </h2>
+      <h3>Sobre sua empresa:</h3>
 
+  
       {/* =========================
           📊 CARDS PREMIUM (COMPACTOS)
       ========================= */}
+
+      
       <div style={styles.metricsGrid}>
+        
         <div style={styles.card}>
+          <span style={styles.cardIcon}>💸</span>
           <p style={styles.cardTitle}>Hoje</p>
           <h3 style={styles.cardValue}>
             R$ {faturamentoHoje.toFixed(2)}
@@ -96,6 +88,7 @@ function Dashboard() {
         </div>
 
         <div style={styles.card}>
+            <span style={styles.cardIcon}>📈</span>
           <p style={styles.cardTitle}>Mês</p>
           <h3 style={styles.cardValue}>
             R$ {faturamentoMes.toFixed(2)}
@@ -103,25 +96,22 @@ function Dashboard() {
         </div>
 
         <div style={styles.card}>
-          <p style={styles.cardTitle}>Atendimentos</p>
+          <span style={styles.cardIcon}>📅</span>
+          <p style={styles.cardTitle}>Atendimentos hoje</p>
           <h3 style={styles.cardValue}>
             {agendamentosHoje.length}
           </h3>
         </div>
 
         <div style={styles.card}>
-          <p style={styles.cardTitle}>Clientes</p>
+          <span style={styles.cardIcon}>💰</span>
+          <p style={styles.cardTitle}> Faturamento da Equipe</p>
           <h3 style={styles.cardValue}>
-            {clientes.length}
+            R$ {faturamentoMesEquipe.toFixed(2)}
           </h3>
         </div>
 
-        <div style={styles.card}>
-          <p style={styles.cardTitle}>Ticket Médio</p>
-          <h3 style={styles.cardValue}>
-            R$ {ticketMedio.toFixed(2)}
-          </h3>
-        </div>
+
       </div>
 
       {/* =========================
@@ -170,92 +160,133 @@ function Dashboard() {
 
 const styles = {
   container: {
-    padding: 14,
-    fontFamily: "Arial",
+    padding: 16,
     background: "#f5f7fb",
     minHeight: "100vh",
+    fontFamily: "Inter, sans-serif",
   },
 
   title: {
-    marginBottom: 10,
+    fontSize: 24,
+    fontWeight: 700,
+    marginBottom: 16,
+    color: "#111827",
   },
 
-  // 📊 GRID COMPACTO
-metricsGrid: {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, 1fr)", // 🔥 3 por linha (mais compacto)
-  gap: 8,
-  marginBottom: 12,
-},
+  metricsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: 12,
+    marginBottom: 20,
+  },
 
-  // 🟦 CARD PREMIUM PEQUENO
-card: {
-  background: "#fff",
-  borderRadius: 10,
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+  card: {
+    background: "#fff",
+    borderRadius: 20,
+    padding: 16,
 
-  padding: 30,
+    boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
 
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "center",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
 
-  textAlign: "center",
+    minHeight: 120,
 
-  minHeight: 70, // 🔥 mantém compacto
-},
+    transition: "all .2s ease",
+    cursor: "pointer",
+  },
+
+  cardIcon: {
+    fontSize: 30,
+    marginBottom: 8,
+  },
 
   cardTitle: {
-    fontSize: 11,
-    color: "#777",
-    marginBottom: 4,
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 6,
+    fontWeight: 500,
   },
 
   cardValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#111",
+    fontSize: 22,
+    fontWeight: 700,
+    color: "#111827",
   },
 
-  // 📅 AGENDA
   section: {
     background: "#fff",
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 10,
+    borderRadius: 20,
+    padding: 16,
+    marginTop: 12,
+    boxShadow: "0 8px 25px rgba(0,0,0,0.05)",
   },
 
   sectionTitle: {
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: 700,
+    marginBottom: 12,
+    color: "#111827",
   },
 
   agendaItem: {
     display: "flex",
     justifyContent: "space-between",
-    padding: 8,
-    borderBottom: "1px solid #eee",
+    alignItems: "center",
+
+    padding: 12,
+
+    borderRadius: 12,
+
+    background: "#fafafa",
+
+    marginBottom: 8,
   },
 
   agendaSub: {
     fontSize: 12,
-    opacity: 0.6,
+    color: "#6B7280",
   },
 
   valor: {
-    fontWeight: "bold",
-    color: "#4CAF50",
+    fontWeight: 700,
+    color: "#10B981",
   },
 
   footer: {
-    marginTop: 15,
+    marginTop: 20,
     textAlign: "center",
   },
 
   footerText: {
-    fontSize: 11,
-    opacity: 0.5,
+    fontSize: 12,
+    color: "#9CA3AF",
   },
+  cardHeader: {
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  marginBottom: 8,
+},
+
+cardEmoji: {
+  fontSize: 18,
+},
+
+cardTitle: {
+  fontSize: 12,
+  color: "#6B7280",
+  fontWeight: 500,
+  margin: 0,
+},
+
+cardValue: {
+  fontSize: 22,
+  fontWeight: 700,
+  color: "#111827",
+},
 };
 
 export default Dashboard;
