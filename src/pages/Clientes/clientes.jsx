@@ -10,7 +10,7 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../../services/firebase";
-import "./Clientes.css";
+import "./clientes.css";
 
 function Clientes() {
 const [clientes, setClientes] = useState([]);
