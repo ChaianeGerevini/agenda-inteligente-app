@@ -1,63 +1,239 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  onAuthStateChanged,
+  sendPasswordResetEmail,
 } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
 
-import { auth } from "../../services/firebase";
+import { useNavigate } from "react-router-dom";
+import { auth, db } from "../../services/firebase";
+import logo from "/src/assets/agendly-logo.jpg";
+import { generateReferralCode } from "/src/contexts/generateReferralCode.js";
+
+
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  query,
+  collection,
+  where,
+  getDocs,
+  getDoc,
+  addDoc,
+  serverTimestamp
+} from "firebase/firestore";
+
+async function criarEmpresaSePlus(user, userData) {
+  if (userData?.plano !== "plus") return;
+  if (userData?.empresaId) return;
+
+  const empresaRef = await addDoc(collection(db, "empresas"), {
+    nome: "Minha Empresa",
+    ownerId: user.uid,
+    plano: "plus",
+    createdAt: serverTimestamp(),
+  });
+
+  await setDoc(
+    doc(db, "usuarios", user.uid),
+    {
+      empresaId: empresaRef.id,
+      role: "gestor",
+      plano: "plus",
+    },
+    { merge: true }
+  );
+
+  return empresaRef.id;
+}
 
 function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
-
+  const [mensagem, setMensagem] = useState("");
+  const [searchParams] = useSearchParams();
+const ref = searchParams.get("ref");
+const conviteSalvo = JSON.parse(
+  localStorage.getItem("conviteAgendly")
+);
   const navigate = useNavigate();
-
-  // 🔐 auto login
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        navigate("/dashboard");
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  async function cadastrar() {
-    setLoading(true);
+  
+const recuperarSenha = async () => {
+  try {
     setErro("");
+    setMensagem("");
 
-    try {
-      await createUserWithEmailAndPassword(auth, email, senha);
-      navigate("/dashboard");
-    } catch (erro) {
-      setErro(erro.message);
-    } finally {
-      setLoading(false);
-    }
+    await sendPasswordResetEmail(auth, email);
+
+    setMensagem("📩 Enviamos um link de recuperação para o seu e-mail.");
+  } catch (error) {
+    setMensagem("");
+    setErro("❌ Não foi possível enviar o e-mail. Verifique o endereço.");
   }
+};
 
-  async function entrar() {
-    setLoading(true);
-    setErro("");
 
-    try {
-      await signInWithEmailAndPassword(auth, email, senha);
-      navigate("/dashboard");
-    } catch (erro) {
-      setErro("Email ou senha inválidos");
-    } finally {
-      setLoading(false);
+async function cadastrar() {
+  setLoading(true);
+  setErro("");
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      senha
+    );
+
+    const user = userCredential.user;
+
+    const referralCode = generateReferralCode(email);
+    // 🏢 Cria empresa automaticamente durante o período de teste
+const empresaRef = await addDoc(
+  collection(db, "empresas"),
+  {
+    nome: "Minha Empresa",
+    ownerId: user.uid,
+    plano: "teste",
+    createdAt: serverTimestamp(),
+  }
+);
+// 🎁 Teste grátis Premium por 15 dias
+const premiumTrial = new Date();
+premiumTrial.setDate(premiumTrial.getDate() + 15);
+
+await setDoc(doc(db, "usuarios", user.uid), {
+  email,
+
+  // 👤 identidade do usuário
+role: conviteSalvo ? "funcionario" : "gestor",
+  // 💳 plano
+  plano: "free",
+  statusAssinatura: "teste",
+  premiumUntil: premiumTrial,
+
+  // 🏢 empresa
+ empresaId: conviteSalvo
+  ? conviteSalvo.empresaId
+  : empresaRef.id,
+
+ gestorId: conviteSalvo
+  ? conviteSalvo.gestorId
+  : user.uid,
+  
+  // 🔒 controle
+  bloqueado: false,
+  criadoEm: serverTimestamp(),
+  ultimoAcesso: serverTimestamp(),
+
+  // 🔗 indicações
+  referralCode,
+  referredBy: ref || null,
+  referralsCount: 0,
+});
+
+if (conviteSalvo) {
+  await updateDoc(
+    doc(db, "convites", conviteSalvo.id),
+    {
+      usado: true,
+      usuarioId: user.uid,
+      usadoEm: serverTimestamp(),
     }
+  );
+
+  localStorage.removeItem("conviteAgendly");
+}
+
+    if (ref) {
+      const q = query(
+        collection(db, "usuarios"),
+        where("referralCode", "==", ref)
+      );
+
+      const snap = await getDocs(q);
+
+      snap.forEach(async (docItem) => {
+        const userRef = doc(db, "usuarios", docItem.id);
+
+        const atual = docItem.data().referralsCount || 0;
+        const novo = atual + 1;
+
+        let updateData = {
+          referralsCount: novo
+        };
+
+        if (novo >= 5) {
+          updateData.premiumUntil = new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000
+          );
+
+          updateData.referralsCount = 0;
+        }
+
+        await updateDoc(userRef, updateData);
+      });
+    }
+
+    navigate("/Faturamento");
+
+  } catch (erro) {
+    setErro(erro.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function entrar() {
+  setLoading(true);
+  setErro("");
+
+  try {
+    const userCredential =
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        senha
+      );
+
+const user = userCredential.user;
+
+// pega dados do usuário
+const userRef = doc(db, "usuarios", user.uid);
+const userSnap = await getDoc(userRef);
+const userData = userSnap.data();
+
+// atualiza último acesso
+await setDoc(
+  userRef,
+  {
+    ultimoAcesso: serverTimestamp(),
+  },
+  { merge: true }
+);
+
+// 🔥 AQUI É ONDE A EMPRESA É CRIADA
+await criarEmpresaSePlus(user, userData);
+
+    navigate("/Faturamento");
+  } catch (erro) {
+    setErro("Email ou senha inválidos");
+  } finally {
+    setLoading(false);
+  }
   }
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
+        <img
+  src={logo}
+  alt="Agendly"
+  style={styles.logo}
+/>
         <h1 style={styles.title}>Agenda Inteligente</h1>
         <p style={styles.subtitle}>Organize seus clientes e horários</p>
 
@@ -89,8 +265,6 @@ function Login() {
           }
         />
 
-        {erro && <p style={styles.error}>{erro}</p>}
-
         {/* 👇 BOTÕES AGRUPADOS CORRETAMENTE */}
         <div style={styles.buttonGroup}>
           <button
@@ -108,6 +282,15 @@ function Login() {
           >
             {loading ? "Criando..." : "Criar Conta"}
           </button>
+
+          <button
+  onClick={recuperarSenha}
+  style={styles.linkButton}
+>
+  Esqueci minha senha
+</button>
+{mensagem && <p style={{ color: "green" }}>{mensagem}</p>}
+{erro && <p style={{ color: "red" }}>{erro}</p>}
         </div>
       </div>
     </div>
@@ -149,8 +332,8 @@ const styles = {
   },
 
   input: {
-    width: "100%",
-    padding: 14,
+    width: "90%",
+    padding: 12,
     marginBottom: 12,
     borderRadius: 10,
     border: "1px solid #e5e7eb",
@@ -196,6 +379,23 @@ const styles = {
     fontSize: 12,
     marginBottom: 10,
   },
+
+  logo: {
+  width: 120,
+  height: "auto",
+  marginBottom: 20,
+  borderRadius: 50,
+},
+
+linkButton: {
+  marginTop: 5,
+  background: "transparent",
+  border: "none",
+  color: "#4A6FFF",
+  cursor: "pointer",
+  fontSize: 13,
+  textDecoration: "underline",
+},
 };
 
 export default Login;

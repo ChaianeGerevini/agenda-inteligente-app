@@ -1,0 +1,285 @@
+/* ===== BASE ===== */
+.clientes-page {
+  width: 100%;
+  padding: 0;
+  background: #f4f7ff;
+  box-sizing: border-box;
+}
+
+/* ===== HEADER MODERNO ===== */
+.header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 16px;
+}
+
+/* ===== AÇÕES (BOTÕES TOPO) ===== */
+.acoes {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+
+  margin-bottom: 20px;
+
+  position: relative;
+  z-index: 10;
+}
+
+.acoes button {
+  flex: 1;
+  min-height: 48px;
+
+}
+
+.btn-primary,
+.btn-secondary {
+  height: 64px;
+  padding: 0 18px;
+  border-radius: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.475);
+  color: #2563eb;
+  border: 1px solid #dbeafe79;
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* ===== LISTA ===== */
+.clientes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== CARD MODERNO ===== */
+.cliente-card {
+  background: white;
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+    margin: 0;
+
+
+  box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+  transition: 0.2s ease;
+}
+
+.cliente-card:hover {
+  transform: translateY(-2px);
+}
+
+.cliente-card h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.cliente-card p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* OBSERVAÇÃO */
+.cliente-card small {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* ===== AÇÕES CARD ===== */
+.acoes-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.editar,
+.excluir {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.editar {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.excluir {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ===== MODAL MODERNO ===== */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 999;
+}
+
+.modal {
+  width: 100%;
+  position: relative;
+  max-width: 420px;
+  background: white;
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+
+  animation: pop 0.2s ease;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* FECHAR */
+.fechar{
+  position:absolute;
+  top:12px;
+  right:12px;
+
+  border:none;
+  background:none;
+
+  font-size:22px;
+  cursor:pointer;
+}
+
+/* INPUTS MODERNOS */
+.modal input,
+.modal textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+  box-sizing: border-box;
+}
+
+.modal input:focus,
+.modal textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  gap: 8px;
+}
+
+/* BOTÃO SALVAR */
+.modal .btn-primary {
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* ===== PROMOÇÃO WHATS ===== */
+.btn-whats {
+  display: flex;
+  width: 100%;
+  margin-bottom: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  gap: 8px;
+  text-align: center;
+  border-radius: 12px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+  .cliente-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  outline: none;
+  margin-top: 12px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cliente-select:focus {
+  border-color: #4A6FFF;
+  box-shadow: 0 0 0 3px rgba(74, 111, 255, 0.15);
+}
+
+.cliente-select:hover {
+  border-color: #4A6FFF;
+}
+
+.btn-whats:hover {
+  transform: translateY(-1px);
+}
+
+.btn-whats:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 480px) {
+  .cliente-card {
+    align-items: flex-start;
+  }
+
+}

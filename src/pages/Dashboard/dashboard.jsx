@@ -3,6 +3,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { collection, onSnapshot } from "firebase/firestore";
 
 import { auth, db } from "../../services/firebase";
+import PremiumGate from "../../components/PremiumGate";
 
 function Dashboard() {
   const [user, setUser] = useState(null);
@@ -11,152 +12,185 @@ function Dashboard() {
 
   // 🔐 AUTH
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-
-    return () => unsubscribe();
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
   }, []);
 
   // 📅 AGENDAMENTOS
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "agendamentos"), (snapshot) => {
+    const unsub = onSnapshot(collection(db, "agendamentos"), (snap) => {
       setAgendamentos(
-        snapshot.docs.map((doc) => ({
+        snap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }))
       );
     });
 
-    return () => unsubscribe();
+    return () => unsub();
+  }, []);
+
+  // 👥 EQUIPE
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "equipe"), (snap) => {
+      setEquipe(
+        snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+      );
+    });
+
+    return () => unsub();
   }, []);
 
   // =========================
-  // 📊 MÉTRICAS
+  // 📅 FILTRO MÊS ATUAL
   // =========================
 
-  const hoje = new Date().toISOString().split("T")[0];
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth();
+  const anoAtual = hoje.getFullYear();
 
-  const agendamentosHoje = agendamentos.filter((a) => a.data === hoje);
+  const concluidos = agendamentos.filter((a) => a.status === "concluido");
 
-  const faturamentoHoje = agendamentosHoje.reduce(
-    (t, a) => t + (a.valor || 0),
-    0
-  );
-  const mesAtual = new Date().getMonth();
-  const anoAtual = new Date().getFullYear();
-
-  const agendamentosMes = agendamentos.filter((a) => {
+  const agendamentosMes = concluidos.filter((a) => {
     const data = new Date(a.data);
     return (
       data.getMonth() === mesAtual &&
       data.getFullYear() === anoAtual
     );
   });
-// Faturamento total da equipe no mês
-const faturamentoMesEquipe = agendamentosMes.reduce(
-  (total, a) => total + Number(a.valor || 0),
-  0
-);
-  const faturamentoMes = agendamentosMes.reduce(
-    (t, a) => t + (a.valor || 0),
+
+  // =========================
+  // 💰 FATURAMENTO REAL (SISTEMA SALÃO)
+  // =========================
+
+  const faturamentoBruto = agendamentosMes.reduce(
+    (t, a) => t + Number(a.valor || 0),
     0
   );
 
+  const faturamentoSalao = agendamentosMes.reduce(
+    (t, a) => t + Number(a.valorSalao || 0),
+    0
+  );
+
+  const faturamentoProfissionais = agendamentosMes.reduce(
+    (t, a) => t + Number(a.valorProfissional || 0),
+    0
+  );
+
+  // =========================
+  // 👥 RANKING REAL
+  // =========================
+
+  const ranking = equipe.map((prof) => {
+    const atendimentos = agendamentosMes.filter(
+      (a) =>
+        a.profissional === prof.nome ||
+        a.profissionalId === prof.id
+    );
+
+    const totalBruto = atendimentos.reduce(
+      (t, a) => t + Number(a.valor || 0),
+      0
+    );
+
+    const ganhoProfissional = atendimentos.reduce(
+      (t, a) => t + Number(a.valorProfissional || 0),
+      0
+    );
+
+    const ganhoSalao = atendimentos.reduce(
+      (t, a) => t + Number(a.valorSalao || 0),
+      0
+    );
+
+    return {
+      ...prof,
+      qtd: atendimentos.length,
+      totalBruto,
+      ganhoProfissional,
+      ganhoSalao,
+    };
+  });
+
+  const rankingOrdenado = [...ranking].sort(
+    (a, b) => b.totalBruto - a.totalBruto
+  );
+
   return (
+      <PremiumGate tipo="premium">
     <div style={styles.container}>
-      <h2 style={styles.title}>
-        Olá, seja bem-vindo! 👋
-      </h2>
-      <h3>Sobre sua empresa:</h3>
+      <h2 style={styles.title}>Olá 👋</h2>
 
-  
       {/* =========================
-          📊 CARDS PREMIUM (COMPACTOS)
+          📊 CARDS
       ========================= */}
-
-      
       <div style={styles.metricsGrid}>
-        
+
         <div style={styles.card}>
-          <span style={styles.cardIcon}>💸</span>
-          <p style={styles.cardTitle}>Hoje</p>
-          <h3 style={styles.cardValue}>
-            R$ {faturamentoHoje.toFixed(2)}
-          </h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-no-axes-combined-icon lucide-chart-no-axes-combined"><path d="M12 16v5"/><path d="M16 14.639V21"/><path d="M20 10.656V21"/><path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"/><path d="M4 18.463V21"/><path d="M8 14.656V21"/></svg>
+          <p style={styles.cardTitle}>Faturamento Bruto</p>
+          <h3>R$ {faturamentoBruto.toFixed(2)}</h3>
         </div>
 
         <div style={styles.card}>
-            <span style={styles.cardIcon}>📈</span>
-          <p style={styles.cardTitle}>Mês</p>
-          <h3 style={styles.cardValue}>
-            R$ {faturamentoMes.toFixed(2)}
-          </h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+          <p style={styles.cardTitle}>Faturamento Salão</p>
+          <h3>R$ {faturamentoSalao.toFixed(2)}</h3>
         </div>
 
         <div style={styles.card}>
-          <span style={styles.cardIcon}>📅</span>
-          <p style={styles.cardTitle}>Atendimentos hoje</p>
-          <h3 style={styles.cardValue}>
-            {agendamentosHoje.length}
-          </h3>
-        </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-check-icon lucide-user-round-check"><path d="M2 21a8 8 0 0 1 13.292-6"/><circle cx="10" cy="8" r="5"/><path d="m16 19 2 2 4-4"/></svg>
+          <p style={styles.cardTitle}>Profissionais</p>
+          <h3>R$ {faturamentoProfissionais.toFixed(2)}</h3>
+        </div> 
 
         <div style={styles.card}>
-          <span style={styles.cardIcon}>💰</span>
-          <p style={styles.cardTitle}> Faturamento da Equipe</p>
-          <h3 style={styles.cardValue}>
-            R$ {faturamentoMesEquipe.toFixed(2)}
-          </h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-sync-icon lucide-calendar-sync"><path d="M11 10v4h4"/><path d="m11 14 1.535-1.605a5 5 0 0 1 8 1.5"/><path d="M16 2v4"/><path d="m21 18-1.535 1.605a5 5 0 0 1-8-1.5"/><path d="M21 22v-4h-4"/><path d="M21 8.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4.3"/><path d="M3 10h4"/><path d="M8 2v4"/></svg>
+          <p style={styles.cardTitle}>Atendimentos</p>
+          <h3>{agendamentosMes.length}</h3>
         </div>
-
-
       </div>
 
       {/* =========================
-          📅 AGENDA DO DIA
+          👥 RANKING
       ========================= */}
       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>📅 Hoje</h3>
+        <h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg> Ranking da Equipe</h3>
 
-        {agendamentosHoje.length === 0 ? (
-          <p style={{ opacity: 0.5, fontSize: 13 }}>
-            Nenhum agendamento hoje
-          </p>
-        ) : (
-          agendamentosHoje
-            .sort((a, b) => (a.hora > b.hora ? 1 : -1))
-            .map((a) => (
-              <div key={a.id} style={styles.agendaItem}>
-                <div>
-                  <b>{a.nomeCliente || "Cliente"}</b>
-                  <p style={styles.agendaSub}>
-                    {a.hora} • {a.servico || "Serviço"}
-                  </p>
-                </div>
+        {rankingOrdenado.map((p) => (
+          <div key={p.id} style={styles.item}>
+            <div>
+              <strong>{p.nome}</strong>
 
-                <span style={styles.valor}>
-                  R$ {a.valor || 0}
-                </span>
+              <div style={styles.sub}>
+                {p.qtd} atendimentos
               </div>
-            ))
-        )}
+            </div>
+
+            <div style={styles.valor}>
+              R$ {p.totalBruto.toFixed(2)}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* =========================
-          👤 USER (SÓ INFO)
-      ========================= */}
       {user && (
         <div style={styles.footer}>
-          <p style={styles.footerText}>
-            {user.email}
-          </p>
+          {user.email}
         </div>
       )}
     </div>
+    </PremiumGate>
   );
 }
+
+// =========================
+// 🎨 STYLES
+// =========================
 
 const styles = {
   container: {
@@ -184,18 +218,12 @@ const styles = {
     background: "#fff",
     borderRadius: 20,
     padding: 16,
-
     boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
-
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-
-    minHeight: 120,
-
-    transition: "all .2s ease",
-    cursor: "pointer",
+    minHeight: 100,
   },
 
   cardIcon: {
@@ -235,13 +263,9 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-
     padding: 12,
-
     borderRadius: 12,
-
     background: "#fafafa",
-
     marginBottom: 8,
   },
 
@@ -264,29 +288,6 @@ const styles = {
     fontSize: 12,
     color: "#9CA3AF",
   },
-  cardHeader: {
-  display: "flex",
-  alignItems: "center",
-  gap: 6,
-  marginBottom: 8,
-},
-
-cardEmoji: {
-  fontSize: 18,
-},
-
-cardTitle: {
-  fontSize: 12,
-  color: "#6B7280",
-  fontWeight: 500,
-  margin: 0,
-},
-
-cardValue: {
-  fontSize: 22,
-  fontWeight: 700,
-  color: "#111827",
-},
 };
 
 export default Dashboard;

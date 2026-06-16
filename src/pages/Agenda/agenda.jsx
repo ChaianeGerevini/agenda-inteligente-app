@@ -1,628 +1,649 @@
-import { useEffect, useState } from "react";
-import {
-  collection,
-  addDoc,
-  onSnapshot,
-  updateDoc,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
-
+import { useEffect, useState, useRef, useMemo } from "react";
+import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { deleteDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+
 function Agenda() {
-  const [mostrarDia, setMostrarDia] = useState(false);
-  const [agendaDia, setAgendaDia] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const [agendamentos, setAgendamentos] = useState([]);
-  const [clientes, setClientes] = useState([]);
+  const [view, setView] = useState("dayGridMonth");
+  const [tituloCalendario, setTituloCalendario] = useState("");
 
-  const [mesAtual, setMesAtual] = useState(new Date());
-  const [visualizacao, setVisualizacao] = useState("mes");
-  // modal
-  const [open, setOpen] = useState(false);
-  const [dataSelecionada, setDataSelecionada] = useState("");
-  const [titulo, setTitulo] = useState("");
-  const [clienteSelecionado, setClienteSelecionado] = useState("");
-  const [valor, setValor] = useState("");
-  const [hora, setHora] = useState("");
-  const [editandoId, setEditandoId] = useState(null);
+  const [eventoSelecionado, setEventoSelecionado] = useState(null);
+  const [statusAtendimento, setStatusAtendimento] = useState("");
 
-  // 🔥 AGENDAMENTOS
+  const [diaSelecionado, setDiaSelecionado] = useState(null);
+  const [atendimentosDia, setAtendimentosDia] = useState([]);
+
+  const calendarRef = useRef(null);
+
+  // 🔥 FIREBASE
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "agendamentos"), (snapshot) => {
       const lista = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-
       setAgendamentos(lista);
     });
 
     return () => unsub();
   }, []);
 
-  // 👤 CLIENTES
+  // 🔥 MOBILE DETECT
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "clientes"), (snapshot) => {
-      const lista = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setClientes(lista);
-    });
-
-    return () => unsub();
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
-  const ano = mesAtual.getFullYear();
-  const mes = mesAtual.getMonth();
+  // 🔥 EVENTS
+const events = useMemo(() => {
+  return agendamentos.map((a) => {
+    const cor = a.corProfissional || "#4A6FFF";
 
-  const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+    return {
+      id: a.id,
+      title: `${a.titulo} - ${a.cliente}`,
+      start: `${a.data}T${a.horaInicio}`,
+      end: a.horaFim ? `${a.data}T${a.horaFim}` : undefined,
 
-/*Array From - nao mexer*/ 
+      backgroundColor: cor,
+      borderColor: cor,
 
-const dias = Array.from({ length: diasNoMes }, (_, i) => {
-  const dia = i + 1;
+      extendedProps: {
+        ...a,
+        corProfissional: cor,
+      },
+    };
+  });
+}, [agendamentos]);
 
-  const dataFormatada = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(
-    dia
-  ).padStart(2, "0")}`;
+  // 🔥 NAV
+  function next() {
+    calendarRef.current?.getApi()?.next();
+  }
 
-  return {
-    dia,
-    data: dataFormatada,
-    eventos: agendamentos
-      .filter((a) => a.data === dataFormatada)
-      .sort((a, b) =>
-        (a.hora || "").localeCompare(b.hora || "")
-      ),
-  };
-}); 
-    /*Array From*/ 
+  function prev() {
+    calendarRef.current?.getApi()?.prev();
+  }
 
+  function today() {
+    calendarRef.current?.getApi()?.today();
+  }
 
-const eventosDia = agendamentos
-  .filter((a) => a.data === agendaDia)
-  .sort((a, b) =>
-    (a.hora || "").localeCompare(b.hora || "")
+  function changeView(v) {
+    const calendarApi = calendarRef.current?.getApi();
+
+    if (v === "timeGridWeek") {
+      calendarApi.today();
+      calendarApi.changeView("timeGridWeek");
+    } else if (v === "timeGridDay") {
+      calendarApi.today();
+      calendarApi.changeView("timeGridDay");
+    } else {
+      calendarApi.changeView("dayGridMonth");
+    }
+
+    setView(v);
+  }
+function enviarConfirmacaoWhatsApp() {
+  if (!eventoSelecionado.telefone) {
+    alert("Telefone do cliente não cadastrado.");
+    return;
+  }
+
+  const telefone = eventoSelecionado.telefone.replace(/\D/g, "");
+
+  const mensagem = encodeURIComponent(
+    `Olá ${eventoSelecionado.cliente}! 💙
+
+Seu atendimento está confirmado.
+
+📅 Data: ${formatarData(eventoSelecionado.data)}
+⏰ Horário: ${eventoSelecionado.horaInicio}
+💇 Serviço: ${eventoSelecionado.titulo}
+
+Aguardamos você! 😊`
   );
-  function mudarMes(delta) {
-    const nova = new Date(ano, mes + delta, 1);
-    setMesAtual(nova);
-  }
 
-  // 🟢 abrir modal
-  function abrirModal(data) {
-    setEditandoId(null);
-    setDataSelecionada(data);
-    setTitulo("");
-    setClienteSelecionado("");
-    setValor("");
-    setHora("");
-    setOpen(true);
-    
-  }
-function editarAgendamento(evento) {
-  setEditandoId(evento.id);
-
-  setDataSelecionada(evento.data);
-  setTitulo(evento.titulo || "");
-  setClienteSelecionado(evento.cliente || "");
-  setValor(evento.valor || "");
-  setHora(evento.hora || "");
-
-  setOpen(true);
+  window.open(
+    `https://wa.me/55${telefone}?text=${mensagem}`,
+    "_blank"
+  );
 }
-async function salvarEdicao() {
-  if (!editandoId) return;
-const conflito = agendamentos.some(
-  (a) =>
-    a.id !== editandoId &&
-    a.data === dataSelecionada &&
-    a.hora === hora
-);
+  async function atualizarStatus(id, status) {
+    try {
+      await updateDoc(doc(db, "agendamentos", id), { status });
 
-if (conflito) {
-  alert("Já existe um atendimento neste horário.");
-  return;
-}
-await updateDoc(doc(db, "agendamentos", editandoId), {
-  titulo,
-  cliente: clienteSelecionado,
-  data: dataSelecionada,
-  hora,
-  valor: Number(valor),
-});
+      setEventoSelecionado((prev) => ({
+        ...prev,
+        status,
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  async function editarAgendamento() {
+  try {
+    await updateDoc(doc(db, "agendamentos", eventoSelecionado.id), {
+      titulo: eventoSelecionado.titulo,
+      cliente: eventoSelecionado.cliente,
+      valor: eventoSelecionado.valor,
+      observacoes: eventoSelecionado.observacoes,
+    });
 
-  setEditandoId(null);
-
-  setTitulo("");
-  setClienteSelecionado("");
-  setValor("");
-  setOpen(false);
+    alert("Agendamento atualizado!");
+  } catch (error) {
+    console.error(error);
+  }
 }
 async function excluirAgendamento() {
-  if (!editandoId) return;
+  try {
+    await deleteDoc(doc(db, "agendamentos", eventoSelecionado.id));
 
-  const confirmar = window.confirm(
-    "Deseja realmente excluir este agendamento?"
-  );
+    setEventoSelecionado(null);
 
-  if (!confirmar) return;
-
-  await deleteDoc(doc(db, "agendamentos", editandoId));
-
-  setEditandoId(null);
-  setTitulo("");
-  setClienteSelecionado("");
-  setValor("");
-  setOpen(false);
-}
-
-  // 💾 salvar agendamento
-  async function salvar() {
-    if (!titulo || !clienteSelecionado) return;
-  const horarioOcupado = agendamentos.some(
-  (a) =>
-    a.data === dataSelecionada &&
-    a.hora === hora
-);
-
-if (horarioOcupado) {
-  alert("Já existe um atendimento neste horário.");
-  return;
-}
- await addDoc(collection(db, "agendamentos"), {
-  titulo,
-  cliente: clienteSelecionado,
-  data: dataSelecionada,
-  hora,
-  valor: Number(valor),
-  createdAt: new Date(),
-});
-
-    setOpen(false);
-    setTitulo("");
-    setClienteSelecionado("");
+    alert("Agendamento excluído!");
+  } catch (error) {
+    console.error(error);
   }
+}
+function temConflito(novo) {
+  return agendamentos.some((a) => {
+    if (a.data !== novo.data) return false;
+    if (a.profissional !== novo.profissional) return false;
 
-return (
-  <div style={styles.container}>
-<div style={styles.header}>
-  <button
-    style={styles.monthButton}
-    onClick={() => mudarMes(-1)}
-  >
-    ◀
-  </button>
+    const inicioA = a.horaInicio;
+    const fimA = a.horaFim;
 
-  <h2>
-    {mesAtual.toLocaleString("pt-BR", {
+    const inicioB = novo.horaInicio;
+    const fimB = novo.horaFim;
+
+    return (
+      (inicioB >= inicioA && inicioB < fimA) ||
+      (fimB > inicioA && fimB <= fimA) ||
+      (inicioB <= inicioA && fimB >= fimA)
+    );
+  });
+}
+  function formatarData(data) {
+    if (!data) return "";
+
+    return new Date(data + "T00:00:00").toLocaleDateString("pt-BR", {
+      day: "2-digit",
       month: "long",
       year: "numeric",
-    })}
-  </h2>
+    });
+  }
 
-  <button
-    style={styles.monthButton}
-    onClick={() => mudarMes(1)}
-  >
-    ▶
-  </button>
-</div>
-    <div style={styles.viewSelector}>
-  <button
-    style={{
-      ...styles.viewButton,
-      ...(visualizacao === "mes"
-        ? styles.viewButtonActive
-        : {}),
-    }}
-    onClick={() => setVisualizacao("mes")}
-  >
-    Mês
-  </button>
-
-  <button
-    style={{
-      ...styles.viewButton,
-      ...(visualizacao === "semana"
-        ? styles.viewButtonActive
-        : {}),
-    }}
-    onClick={() => setVisualizacao("semana")}
-  >
-    Semana
-  </button>
-
-  <button
-    style={{
-      ...styles.viewButton,
-      ...(visualizacao === "dia"
-        ? styles.viewButtonActive
-        : {}),
-    }}
-    onClick={() => setVisualizacao("dia")}
-  >
-    Dia
-  </button>
-</div>
-      {/* CALENDÁRIO */}
-     <div style={styles.grid}>
-  {(visualizacao === "mes"
-    ? dias
-    : visualizacao === "semana"
-    ? dias.filter((_, i) => {
-        const hoje = new Date().getDate();
-        return (
-          i + 1 >= hoje &&
-          i + 1 < hoje + 7
-        );
-      })
-    : dias.filter(
-        (d) =>
-          d.dia === new Date().getDate()
-      )
-  ).map((d) => (
-          <div
-            key={d.data}
-            style={styles.day}
-            onClick={() => {
-  setAgendaDia(d.data);
-  setMostrarDia(true);
-}}
-          >
-            <div style={styles.dayNumber}>{d.dia}</div>
-
-            {d.eventos.map((ev) => (
-  <div
-  key={ev.id}
-  style={styles.event}
-  onClick={(e) => {
-    e.stopPropagation();
-    editarAgendamento(ev);
-  }}
->
-<div style={{ fontWeight: 700 }}>
-  💇 {ev.titulo}
-</div>
-
-<div style={styles.client}>
-  👤 {ev.cliente}
-</div>
-
-<div style={styles.client}>
-  🕒 {ev.hora}
-</div>
-
-<div style={styles.client}>
-  💰 R$ {ev.valor || 0}
-</div>
-  </div>
-))}
+  return (
+    <>
+      <div style={styles.container}>
+        {/* HEADER */}
+        <div style={styles.header}>
+          <div style={styles.nav}>
+            <button style={styles.arrow} onClick={prev}>‹</button>
+            <button style={styles.arrow} onClick={next}>›</button>
           </div>
-          
-        ))}
+
+          <div style={styles.monthTitle}>
+            {view === "dayGridMonth" && "  "}
+            {view === "timeGridWeek" && " "}
+            {view === "timeGridDay" && " "}
+            {tituloCalendario}
+          </div>
+
+          <div style={styles.tabs}>
+            <button
+              style={view === "dayGridMonth" ? styles.active : styles.tab}
+              onClick={() => changeView("dayGridMonth")}
+            >
+              Mês
+            </button>
+
+            <button
+              style={view === "timeGridWeek" ? styles.active : styles.tab}
+              onClick={() => changeView("timeGridWeek")}
+            >
+              Semana
+            </button>
+
+            <button
+              style={view === "timeGridDay" ? styles.active : styles.tab}
+              onClick={() => changeView("timeGridDay")}
+            >
+              Dia
+            </button>
+          </div>
+        </div>
+
+        {/* CALENDÁRIO */}
+        <div style={styles.calendar}>
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView={isMobile ? "timeGridWeek" : "dayGridMonth"}
+
+        
+            slotMinTime="07:00:00"
+            slotMaxTime="22:00:00"
+            allDaySlot={false}
+            nowIndicator={true}
+            slotLabelFormat={{
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            }}
+            dayHeaderFormat={{ weekday: "short" }}
+            expandRows={true}
+            stickyHeaderDates={true}
+            firstDay={0}
+            weekends={true}
+            height="auto"
+            eventDisplay="block"
+            locale="pt-br"
+            headerToolbar={false}
+            events={events}
+            dayMaxEventRows={3}
+            viewDidMount={(info) => {
+              setView(info.view.type);
+              setTituloCalendario(info.view.title);
+            }}
+            datesSet={(info) => {
+              const meses = [
+                "Janeiro","Fevevereiro","Março","Abril","Maio","Junho",
+                "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
+              ];
+
+              if (info.view.type === "dayGridMonth") {
+                const dataAtual = info.view.currentStart;
+                setTituloCalendario(meses[dataAtual.getMonth()]);
+              }
+
+              if (info.view.type === "timeGridWeek") {
+                const inicio = new Date(info.start);
+                const fim = new Date(info.end);
+                fim.setDate(fim.getDate() - 1);
+
+                setTituloCalendario(
+                  `${inicio.getDate()} - ${fim.getDate()} ${meses[fim.getMonth()]}`
+                );
+              }
+
+              if (info.view.type === "timeGridDay") {
+                const data = new Date(info.start);
+                setTituloCalendario(`${data.getDate()} ${meses[data.getMonth()]}`);
+              }
+            }}
+            dateClick={(info) => {
+              const lista = agendamentos.filter(
+                (a) => a.data === info.dateStr
+              );
+
+              setDiaSelecionado(info.dateStr);
+              setAtendimentosDia(lista);
+            }}
+        eventClick={(info) => {
+  setEventoSelecionado({
+    id: info.event.id,
+    titulo: info.event.title,
+    ...info.event.extendedProps,
+  });
+}}
+eventContent={(arg) => {
+  const cor =
+    arg.event.extendedProps?.corProfissional ||
+    arg.event.backgroundColor ||
+    "#4A6FFF";
+
+  return (
+    <div style={styles.eventContent}>
+      <div
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          backgroundColor: cor,
+          flexShrink: 1,
+        }}
+      />
+
+      <span style={styles.eventText}>
+        {arg.event.title}
+      </span>
+    </div>
+  );
+}}
+          />
+        </div>
       </div>
 
-      {/* MODAL */}
-    {mostrarDia && (
-  <div
-    style={styles.modalOverlay}
-    onClick={() => setMostrarDia(false)}
-  >
-    <div
-      style={styles.modal}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <h3>📅 Agenda do Dia</h3>
+      {/* MODAL EVENTO */}
+      {eventoSelecionado && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <button
+              style={styles.closeIcon}
+              onClick={() => setEventoSelecionado(null)}
+            >
+              ✕
+            </button>
 
-      <p>{agendaDia}</p>
-
-      {eventosDia.length === 0 && (
-        <p>Nenhum atendimento.</p>
-      )}
-
-      {eventosDia.map((ev) => (
-        <div
-          key={ev.id}
-          style={styles.eventCard}
-          onClick={() => editarAgendamento(ev)}
-        >
-          <strong>🕒 {ev.hora}</strong>
-
-          <div>👤 {ev.cliente}</div>
-
-          <div>💇 {ev.titulo}</div>
-
-          <div>💰 R$ {ev.valor}</div>
-        </div>
-      ))}
-
-      <button
-        style={styles.fabDay}
-        onClick={() => {
-          setMostrarDia(false);
-          abrirModal(agendaDia);
-        }}
-      >
-        +
-      </button>
-    </div>
-  </div>
-)}
-      {open && (
-        <div style={styles.modalOverlay} onClick={() => setOpen(false)}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <h3>
-  {editandoId
-    ? "✏️ Editar Agendamento"
-    : "📅 Novo Agendamento"}
-</h3>
-            <p>{dataSelecionada}</p>
-
-            {/* SERVIÇO */}
-            <input
-              placeholder="Serviço (ex: corte, unha...)"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              style={styles.input}
-            />
-            <input
-  type="number"
-  placeholder="Valor do serviço"
-  value={valor}
-  onChange={(e) => setValor(e.target.value)}
-  style={styles.input}
-/>
-<input
-  type="time"
-  value={hora}
-  onChange={(e) => setHora(e.target.value)}
-  style={styles.input}
-/>
-            {/* CLIENTE */}
-         <input
-  type="text"
-  placeholder="Nome do cliente"
-  value={clienteSelecionado}
-  onChange={(e) => setClienteSelecionado(e.target.value)}
-  style={styles.input}
-/>
-
-
-           <button
-  onClick={editandoId ? salvarEdicao : salvar}
-  style={styles.button}
+            <div
+  style={{
+    background: eventoSelecionado.corProfissional || "#4A6FFF",
+    color: "#fff",
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 15,
+  }}
 >
-  {editandoId ? "Salvar Alterações" : "Salvar"}
+  <h2 style={{ margin: 0 }}>
+    💇 {eventoSelecionado.titulo}
+  </h2>
+
+  <div style={{ opacity: .9, marginTop: 6 }}>
+    {eventoSelecionado.profissional}
+  </div>
+</div>
+
+
+<div style={styles.infoCard}>
+  <span><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-clock-icon lucide-calendar-clock"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg> Data</span>
+  <strong>
+    {formatarData(eventoSelecionado.data)}
+  </strong>
+</div>
+
+
+<div style={styles.infoCard}>
+  <span><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alarm-clock-icon lucide-alarm-clock"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/></svg> Horário</span>
+  <strong>
+    {eventoSelecionado.horaInicio}
+    {" - "}
+    {eventoSelecionado.horaFim}
+  </strong>
+</div>
+
+
+<div style={styles.infoCard}>
+  <span><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Cliente</span>
+  <strong>
+    {eventoSelecionado.cliente}
+  </strong>
+</div>
+
+
+<div style={styles.valorCard}>
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote-arrow-up-icon lucide-banknote-arrow-up"><path d="M12 18H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5"/><path d="M18 12h.01"/><path d="M19 22v-6"/><path d="m22 19-3-3-3 3"/><path d="M6 12h.01"/><circle cx="12" cy="12" r="2"/></svg> R$ {Number(eventoSelecionado.valor || 0).toFixed(2)}
+</div>
+            <button
+  style={styles.whatsappButton}
+  onClick={enviarConfirmacaoWhatsApp}
+>
+  Confirmar pelo WhatsApp
 </button>
-{editandoId && (
-  <button
-    onClick={excluirAgendamento}
-    style={{
-      ...styles.button,
-      marginTop: 10,
-      background: "#d32f2f",
-    }}
-  >
-    Excluir Agendamento
-  </button>
-)}
+
+            <h4>Status</h4>
+
+            <div style={styles.statusContainer}>
+              <button
+                onClick={() =>
+                  atualizarStatus(eventoSelecionado.id, "concluido")
+                }
+                style={{
+                  ...styles.statusButton,
+                  background:
+                    eventoSelecionado.status === "concluido"
+                      ? "#16A34A"
+                      : "#f2f6f3ff",
+                  color:
+                    eventoSelecionado.status === "concluido"
+                      ? "#FFF"
+                      : "#111",
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#61c278ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
+              </button>
+
+<button
+  style={{
+    ...styles.actionButton,
+    background: "#EF4444",
+    color: "#fff",
+  }}
+  onClick={excluirAgendamento}
+>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f2f2f2ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+</button>
+            </div>
           </div>
         </div>
       )}
 
-      <button
-  style={styles.fab}
-  onClick={() => {
-    const hoje = new Date()
-      .toISOString()
-      .split("T")[0];
+      {/* MODAL DIA */}
+      {diaSelecionado && (
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            <button
+              style={styles.closeIcon}
+              onClick={() => setDiaSelecionado(null)}
+            >
+              ✕
+            </button>
 
-    abrirModal(hoje);
-  }}
->
-  +
-</button>
-    </div>
+            <h2>Atendimentos</h2>
+            <p>{formatarData(diaSelecionado)}</p>
+
+            {atendimentosDia.length === 0 && (
+              <p>Nenhum atendimento.</p>
+            )}
+
+            {atendimentosDia.map((item) => (
+              <div key={item.id} style={styles.cardAtendimento}>
+                <strong>
+                  {item.horaInicio} - {item.horaFim}
+                </strong>
+
+                <div>{item.cliente}</div>
+                <div>{item.titulo}</div>
+
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color:
+                      item.status === "cancelado"
+                        ? "#DC2626"
+                        : item.status === "concluido"
+                        ? "#16A34A"
+                        : "#F59E0B",
+                  }}
+                >
+                  {item.status === "cancelado"
+                    ? "❌ Cancelado"
+                    : item.status === "concluido"
+                    ? "✅ Concluído"
+                    : "⏳ Pendente"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
 const styles = {
   container: {
-    padding: 16,
-    paddingBottom: 100,
-    background: "#f5f7fb",
+    padding: 14,
+    background: "#F5F7FB",
     minHeight: "100vh",
-    fontFamily: "Inter, Arial, sans-serif",
+    fontFamily: "Inter, Arial",
   },
-
-  // HEADER
   header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
     background: "#fff",
-    padding: "12px 16px",
+    padding: 10,
     borderRadius: 16,
-    boxShadow: "0 4px 12px rgba(0,0,0,.05)",
-  },
-
-  monthButton: {
-    border: "none",
-    background: "#eef2ff",
-    color: "#4A6FFF",
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-
-  // BOTÕES MÊS / SEMANA / DIA
-  viewSelector: {
+    marginBottom: 10,
     display: "flex",
-    background: "#fff",
-    padding: 5,
-    borderRadius: 14,
-    marginBottom: 16,
-    boxShadow: "0 4px 12px rgba(0,0,0,.05)",
+    alignItems: "center",
+    gap: 10,
+    boxShadow: "0 4px 14px rgba(0,0,0,0.05)",
   },
-
-  viewButton: {
+  nav: { display: "flex", gap: 10 },
+  arrow: {
+    border: "none",
+    background: "#f3f3f7ff",
+    padding: "8px 12px",
+    borderRadius: 10,
+    fontSize: 18,
+    cursor: "pointer",
+  },
+  tabs: { display: "flex", gap: 6 },
+  tab: {
+    border: "none",
+    padding: "6px 8px",
+    borderRadius: 8,
+    background: "#EEF2FF",
+    fontWeight: 600,
+    fontSize: 12,
+  },
+  active: {
+    border: "none",
+    padding: "6px 8px",
+    borderRadius: 8,
+    background: "#4A6FFF",
+    color: "#fff",
+    fontWeight: 600,
+    fontSize: 12,
+  },
+  calendar: { background: "#fff", borderRadius: 16, padding: 2 },
+  monthTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: 600,
+    background: "rgba(255,255,255,0.6)",
+backdropFilter: "blur(4px)",
+  },
+  overlay: {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: "rgba(0,0,0,0.4)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 9999,
+},
+  modal: {
+    position: "relative",
+    width: "90%",
+    maxWidth: 450,
+    background: "#fff",
+    borderRadius: 20,
+    padding: 20,
+  },
+  closeIcon: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    width: 35,
+    height: 35,
+    border: "none",
+    borderRadius: "50%",
+    background: "#F3F4F6",
+    fontSize: 18,
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+  statusContainer: { display: "flex", gap: 10, marginTop: 10 },
+  statusButton: {
     flex: 1,
     border: "none",
     padding: 12,
-    borderRadius: 10,
-    background: "transparent",
-    cursor: "pointer",
-    fontWeight: 600,
-    color: "#666",
-    transition: ".2s",
-  },
-
-  viewButtonActive: {
-    background: "#4A6FFF",
-    color: "#fff",
-    boxShadow: "0 4px 10px rgba(74,111,255,.3)",
-  },
-
-grid: {
-  display: "grid",
-  gridTemplateColumns: "repeat(7, 1fr)",
-  gap: 8,
-
-},
-
-  day: {
-    minHeight: 100,
-    background: "#fff",
-    borderRadius: 16,
-    padding: 8,
-    cursor: "pointer",
-    boxShadow: "0 2px 8px rgba(0,0,0,.04)",
-    transition: ".2s",
-  },
-
-  dayNumber: {
-    fontWeight: 700,
-    fontSize: 14,
-    color: "#111827",
-    marginBottom: 6,
-  },
-
-  // EVENTO
-  event: {
-    background: "#EEF2FF",
-    borderLeft: "4px solid #4A6FFF",
-    color: "#111827",
-    padding: 6,
-    borderRadius: 8,
-    marginBottom: 4,
-    fontSize: 11,
-  },
-
-  client: {
-    fontSize: 10,
-    color: "#666",
-  },
-
-  // MODAL
-  modalOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 999,
-  },
-
-  modal: {
-    background: "#fff",
-    width: "90%",
-    maxWidth: 400,
-    borderRadius: 24,
-    padding: 20,
-    boxShadow: "0 10px 30px rgba(0,0,0,.15)",
-  },
-
-  input: {
-    width: "100%",
-    padding: 14,
-    marginTop: 8,
-    marginBottom: 10,
-    border: "1px solid #e5e7eb",
     borderRadius: 12,
-    fontSize: 14,
-    outline: "none",
-    boxSizing: "border-box",
-  },
-
-  button: {
-    width: "100%",
-    padding: 14,
-    border: "none",
-    borderRadius: 14,
-    background: "#4A6FFF",
-    color: "#fff",
     fontWeight: 600,
-    fontSize: 15,
-    cursor: "pointer",
-    marginTop: 10,
   },
-
-  deleteButton: {
-    width: "100%",
-    padding: 14,
+  actionButton: {
+    flex: 1,
     border: "none",
-    borderRadius: 14,
-    background: "#EF4444",
-    color: "#fff",
-    fontWeight: 600,
+    padding: 12,
+    borderRadius: 12,
     cursor: "pointer",
-    marginTop: 10,
   },
+  cardAtendimento: {
+    padding: 12,
+    borderRadius: 12,
+    background: "#F7F8FC",
+    marginBottom: 10,
+  },
+eventContent: {
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "0px 4px",
+  borderRadius: 4,
+  overflow: "hidden",
 
-  // BOTÃO FLUTUANTE
-  fab: {
-    position: "fixed",
-    padding: 10,
-    bottom: 90,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: "50%",
-    border: "none",
-    background: "#4A6FFF",
-    color: "#fff",
-    fontSize: 30,
-    cursor: "pointer",
-    boxShadow: "0 10px 25px rgba(74,111,255,.4)",
-    zIndex: 1000,
-  },
-  eventCard: {
-  background: "#fff",
-  border: "1px solid #eee",
-  borderRadius: 12,
+},
+ eventText: {
+  fontSize: 12,
+  fontWeight: 600,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+},
+whatsappButton: {
+  width: "100%",
+  border: "none",
+  background: "#25D366",
+  color: "#fff",
   padding: 12,
-  marginBottom: 10,
+  borderRadius: 12,
+  fontWeight: 600,
   cursor: "pointer",
+  marginTop: 10,
+},
+infoCard: {
+  background: "#F8FAFC",
+  border: "1px solid #E5E7EB",
+  borderRadius: 14,
+  padding: 14,
+  marginBottom: 10,
+
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+
+  fontSize: 14,
 },
 
-fabDay: {
-  width: 60,
-  height: 60,
-  borderRadius: "50%",
-  border: "none",
-  background: "#4A6FFF",
-  color: "#fff",
-  fontSize: 28,
-  marginTop: 20,
-  cursor: "pointer",
+
+valorCard: {
+  marginTop: 12,
+  padding: 16,
+
+  background: "#ECFDF5",
+  color: "#059669",
+
+  borderRadius: 14,
+
+  fontWeight: 700,
+  fontSize: 20,
+  textAlign: "center",
 },
 };
 
