@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Java / JDK
+*.jdk/
+oracleJdk-26.jdk/
+
+# Firebase / Secrets
+config/serviceAccount.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
