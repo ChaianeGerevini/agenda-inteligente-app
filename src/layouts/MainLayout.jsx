@@ -59,7 +59,7 @@ const iniciarCheckout = async (plano) => {
       return;
     }
 
-    const res = await fetch("http://localhost:3001/checkout", {
+    const res = await fetch("https://backend-agenda-hgrd.onrender.com/checkout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
