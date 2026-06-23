@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
+import { useUser } from "../../contexts/UserContext";
 
 import { auth, db } from "../../services/firebase";
 import PremiumGate from "../../components/PremiumGate";
@@ -9,6 +15,7 @@ function Dashboard() {
   const [user, setUser] = useState(null);
   const [equipe, setEquipe] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
+  const { usuario } = useUser();
 
   // 🔐 AUTH
   useEffect(() => {
@@ -17,32 +24,46 @@ function Dashboard() {
   }, []);
 
   // 📅 AGENDAMENTOS
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "agendamentos"), (snap) => {
-      setAgendamentos(
-        snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }))
-      );
-    });
+useEffect(() => {
+  if (!usuario?.empresaId) return;
 
-    return () => unsub();
-  }, []);
+  const q = query(
+    collection(db, "agendamentos"),
+    where("empresaId", "==", usuario.empresaId)
+  );
+
+  const unsub = onSnapshot(q, (snap) => {
+    setAgendamentos(
+      snap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+    );
+  });
+
+  return () => unsub();
+}, [usuario]);
 
   // 👥 EQUIPE
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "equipe"), (snap) => {
-      setEquipe(
-        snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }))
-      );
-    });
+useEffect(() => {
+  if (!usuario?.empresaId) return;
 
-    return () => unsub();
-  }, []);
+  const q = query(
+    collection(db, "equipe"),
+    where("empresaId", "==", usuario.empresaId)
+  );
+
+  const unsub = onSnapshot(q, (snap) => {
+    setEquipe(
+      snap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+    );
+  });
+
+  return () => unsub();
+}, [usuario]);
 
   // =========================
   // 📅 FILTRO MÊS ATUAL
@@ -71,15 +92,21 @@ function Dashboard() {
     0
   );
 
-  const faturamentoSalao = agendamentosMes.reduce(
-    (t, a) => t + Number(a.valorSalao || 0),
-    0
+const faturamentoSalao = agendamentosMes.reduce((total, agendamento) => {
+  const profissional = equipe.find(
+    (p) => p.nome === agendamento.profissional
   );
 
-  const faturamentoProfissionais = agendamentosMes.reduce(
-    (t, a) => t + Number(a.valorProfissional || 0),
-    0
+  const percentualSalao = Number(profissional?.comissao || 0);
+
+  return (
+    total +
+    (Number(agendamento.valor || 0) * percentualSalao) / 100
   );
+}, 0);
+
+const faturamentoProfissionais =
+  faturamentoBruto - faturamentoSalao;
 
   // =========================
   // 👥 RANKING REAL
@@ -97,15 +124,17 @@ function Dashboard() {
       0
     );
 
-    const ganhoProfissional = atendimentos.reduce(
-      (t, a) => t + Number(a.valorProfissional || 0),
-      0
-    );
+ const ganhoSalao = atendimentos.reduce((total, a) => {
+  return (
+    total +
+    (Number(a.valor || 0) *
+      Number(prof.comissao || 0)) /
+      100
+  );
+}, 0);
 
-    const ganhoSalao = atendimentos.reduce(
-      (t, a) => t + Number(a.valorSalao || 0),
-      0
-    );
+const ganhoProfissional =
+  totalBruto - ganhoSalao;
 
     return {
       ...prof,

@@ -73,24 +73,26 @@ useEffect(() => {
 
 }, []);
 useEffect(() => {
+  if (!usuario?.empresaId) return;
 
-  const unsub = onSnapshot(
+  const q = query(
     collection(db, "equipe"),
-    (snapshot) => {
-
-      const lista = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      setEquipe(lista);
-
-    }
+    where("empresaId", "==", usuario.empresaId),
+    where("status", "==", "ativo")
   );
 
-  return () => unsub();
+  const unsub = onSnapshot(q, (snapshot) => {
+    const lista = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
-}, []);
+    setEquipe(lista);
+  });
+
+  return () => unsub();
+}, [usuario]);
+
 const clientesFiltrados =
   cliente.length > 0
     ? clientes.filter((c) =>
@@ -197,17 +199,17 @@ if (conflito) {
   alert("⛔ Já existe um agendamento nesse horário para esse profissional.");
   return;
 }
-
-  await addDoc(collection(db, "agendamentos"), {
+await addDoc(collection(db, "agendamentos"), {
   titulo,
   cliente,
   telefone,
   data,
-
   horaInicio,
   horaFim,
-
   profissional,
+
+  empresaId: usuario.empresaId,
+  gestorId: usuario.uid,
 
   corProfissional:
     profissionalSelecionado?.cor,
@@ -220,6 +222,7 @@ if (conflito) {
 
   createdAt: new Date(),
 });
+
 await addDoc(collection(db, "notificacoes"), {
   empresaId: usuario.empresaId,
 

@@ -15,10 +15,14 @@ import {
 import {
   addDoc,
   collection,
+   doc,
+  getDoc,
+  setDoc,
   serverTimestamp
 } from "firebase/firestore";
 
 import { db } from "../services/firebase";
+
 
 
 
@@ -41,9 +45,7 @@ function MainLayout() {
   const [nomePerfil, setNomePerfil] = useState("");
   const [empresaPerfil, setEmpresaPerfil] = useState("");
   const [telefonePerfil, setTelefonePerfil] = useState("");
-  const [fotoPerfil, setFotoPerfil] = useState(
-  localStorage.getItem("fotoPerfil") || ""
-);
+  const [fotoPerfil, setFotoPerfil] = useState("");
  const [senhaAtual, setSenhaAtual] = useState("");
 const [novaSenha, setNovaSenha] = useState("");
 const [confirmarSenha, setConfirmarSenha] = useState("");
@@ -173,23 +175,28 @@ const alterarSenha = async () => {
   }
 };
 
+async function carregarPerfil(uid) {
+  const ref = doc(db, "usuarios", uid);
 
+  const snap = await getDoc(ref);
+
+  if (snap.exists()) {
+    const dados = snap.data();
+
+    setNomePerfil(dados.nomePerfil || "");
+    setEmpresaPerfil(dados.empresaPerfil || "");
+    setTelefonePerfil(dados.telefonePerfil || "");
+    setFotoPerfil(dados.fotoPerfil || "");
+  }
+}
 useEffect(() => {
   const unsubscribe = onAuthStateChanged(
     auth,
     (user) => {
       setUsuario(user);
-      setNomePerfil(
-  localStorage.getItem("nomePerfil") || ""
-);
-
-setEmpresaPerfil(
-  localStorage.getItem("empresaPerfil") || ""
-);
-
-setTelefonePerfil(
-  localStorage.getItem("telefonePerfil") || ""
-);
+      if (user) {
+  carregarPerfil(user.uid);
+}
     }
     
   );
@@ -406,21 +413,27 @@ Plano atual: <strong>{planoAtual.nome}</strong>
 
 <button
   style={styles.secondaryBtn}
-  onClick={() => {
-    setFotoPerfil("");
-    localStorage.removeItem("fotoPerfil");
-  }}
+onClick={() => {
+  setFotoPerfil("");
+}}
 >
   ✨ Usar logo Agendly
 </button>
 
- <button
+<button
   style={styles.btnPrimary}
-  onClick={() => {
-    localStorage.setItem("nomePerfil", nomePerfil);
-    localStorage.setItem("empresaPerfil", empresaPerfil);
-    localStorage.setItem("telefonePerfil", telefonePerfil);
-    localStorage.setItem("fotoPerfil",fotoPerfil);
+  onClick={async () => {
+
+    await setDoc(
+      doc(db, "usuarios", usuario.uid),
+      {
+        nomePerfil,
+        empresaPerfil,
+        telefonePerfil,
+        fotoPerfil,
+      },
+      { merge: true }
+    );
 
     alert("Perfil salvo!");
     setModalPerfil(false);
