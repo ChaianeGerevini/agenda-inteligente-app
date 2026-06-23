@@ -1,5 +1,13 @@
 import { useEffect, useState, useRef, useMemo } from "react";
-import { collection, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { useUser } from "../../contexts/UserContext";
+import {
+  collection,
+  onSnapshot,
+  doc,
+  updateDoc,
+  query,
+  where,
+} from "firebase/firestore";
 import { deleteDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 
@@ -19,21 +27,30 @@ function Agenda() {
 
   const [diaSelecionado, setDiaSelecionado] = useState(null);
   const [atendimentosDia, setAtendimentosDia] = useState([]);
+  const { usuario } = useUser();
 
   const calendarRef = useRef(null);
 
   // 🔥 FIREBASE
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "agendamentos"), (snapshot) => {
-      const lista = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setAgendamentos(lista);
-    });
+useEffect(() => {
+  if (!usuario?.empresaId) return;
 
-    return () => unsub();
-  }, []);
+  const q = query(
+    collection(db, "agendamentos"),
+    where("empresaId", "==", usuario.empresaId)
+  );
+
+  const unsub = onSnapshot(q, (snapshot) => {
+    const lista = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    setAgendamentos(lista);
+  });
+
+  return () => unsub();
+}, [usuario]);
 
   // 🔥 MOBILE DETECT
   useEffect(() => {
