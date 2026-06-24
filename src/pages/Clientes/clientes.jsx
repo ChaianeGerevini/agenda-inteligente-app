@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-
 import {
   collection,
   addDoc,
@@ -7,9 +6,11 @@ import {
   deleteDoc,
   updateDoc,
   doc,
+  query,
+  where,
 } from "firebase/firestore";
 
-import { db } from "../../services/firebase";
+import { auth, db } from "../../services/firebase";
 import "./clientes.css";
 
 function Clientes() {
@@ -27,10 +28,21 @@ const [clientes, setClientes] = useState([]);
   const [promo, setPromo] = useState("");
   const [clienteSelecionado, setClienteSelecionado] = useState("");
 
-  useEffect(() => {
+useEffect(() => {
+
+  if (!auth.currentUser) return;
+
+  const q = query(
+    collection(db, "clientes"),
+    where(
+      "usuarioId",
+      "==",
+      auth.currentUser.uid
+    )
+  );
 
   const unsub = onSnapshot(
-    collection(db, "clientes"),
+    q,
     (snapshot) => {
 
       const lista = snapshot.docs.map(doc => ({
@@ -56,6 +68,7 @@ await addDoc(
     nome,
     telefone,
     observacao,
+    usuarioId: auth.currentUser.uid,
     createdAt: new Date(),
   }
 );

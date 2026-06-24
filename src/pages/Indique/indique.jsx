@@ -40,7 +40,7 @@ function Indique() {
     return <p style={styles.loading}>Usuário não encontrado</p>;
   }
 
-const link = `https://agenda-inteligente-app-nine.vercel.app/signup?ref=${userData.referralCode}`;
+const link = `https://bqsh6c.mimo.run/index.html?ref=${userData.referralCode}`;
 
   const progress = Math.min(
     ((userData.referralsCount || 0) / 5) * 100,
