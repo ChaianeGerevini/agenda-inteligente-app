@@ -34,10 +34,10 @@ function Login() {
   const [mensagem, setMensagem] = useState("");
 
 
- 
-const conviteSalvo = JSON.parse(localStorage.getItem("conviteAgendly") || "null");
-const conviteId = conviteSalvo?.id || null;
-const referral = localStorage.getItem("referral");
+const [searchParams] = useSearchParams();
+
+const conviteId = searchParams.get("convite");
+const referral = searchParams.get("ref");
 
 
   const navigate = useNavigate();
