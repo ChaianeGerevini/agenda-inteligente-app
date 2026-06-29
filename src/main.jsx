@@ -6,15 +6,31 @@ import { BrowserRouter } from "react-router-dom";
 import { UiProvider } from "./contexts/UiContext";
 import { UserProvider } from "./contexts/UserContext";
 
-ReactDOM.createRoot(
-  document.getElementById("root")
-).render(
+import { registerSW } from "virtual:pwa-register";
 
-  <BrowserRouter>
-  <UserProvider>
-    <UiProvider>
-      <App />
-    </UiProvider>
-    </UserProvider>
-  </BrowserRouter>
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    if (confirm("Nova versão disponível. Atualizar agora?")) {
+      updateSW(true);
+    }
+  },
+});
+
+const root = document.getElementById("root");
+
+if (!root) {
+  throw new Error("Root element not found");
+}
+
+ReactDOM.createRoot(root).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <UserProvider>
+        <UiProvider>
+          <App />
+        </UiProvider>
+      </UserProvider>
+    </BrowserRouter>
+  </React.StrictMode>
 );

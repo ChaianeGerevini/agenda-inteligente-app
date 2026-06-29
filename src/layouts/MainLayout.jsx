@@ -878,6 +878,7 @@ badge: {
   justifyContent: "center",
   padding: "0 5px",
 },
+
 };
 
 export default MainLayout;

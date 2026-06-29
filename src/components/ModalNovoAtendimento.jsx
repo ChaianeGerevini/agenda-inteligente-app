@@ -37,7 +37,6 @@ const profissionalSelecionado = equipe.find(
   (p) => p.nome === profissional
 );
 
-const [observacoes, setObservacoes] = useState("");
 const [data, setData] = useState(hoje);
 
 useEffect(() => {
@@ -216,8 +215,6 @@ await addDoc(collection(db, "agendamentos"), {
 
   valor: Number(valor || 0),
 
-  observacoes,
-
   status: "agendado",
 
   createdAt: new Date(),
@@ -243,7 +240,6 @@ await addDoc(collection(db, "notificacoes"), {
       setHoraInicio("");
       setHoraFim("");
       setProfissional("");
-      setObservacoes("");
       setData(hoje);
 
       setModalNovoAgendamento(false);
@@ -435,11 +431,6 @@ placeholder="Valor do Atendimento"
     minHeight: 90,
     resize: "none",
   }}
-  placeholder="Observações"
-  value={observacoes}
-  onChange={(e) =>
-    setObservacoes(e.target.value)
-  }
 />
 
         <button
