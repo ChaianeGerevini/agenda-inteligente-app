@@ -40,7 +40,7 @@ function Indique() {
     return <p style={styles.loading}>Usuário não encontrado</p>;
   }
 
-const link = `${window.location.origin}/i/${userData.referralCode}`;
+const link = `https://bqsh6c.mimo.run/index.html?ref=${userData.referralCode}`;
 
   const progress = Math.min(
     ((userData.referralsCount || 0) / 5) * 100,
