@@ -12,6 +12,7 @@ import Indique from "./pages/Indique/indique.jsx";
 import Sidebar from "./components/sidebar.jsx";
 import Convite from "./pages/Convite";
 import Referral from "./pages/Referral";
+import Landing from "./pages/Landing";
 
 
 import MainLayout from "./layouts/MainLayout";
@@ -25,7 +26,6 @@ function App() {
     element={<Referral />}
 />
 <Route path="/r/:code" element={<Landing />} />
-<Route path="/login" element={<Login />} />
 
         <Route element={<MainLayout />}>
          <Route path="/Faturamento" element={<Dashboard />} />
