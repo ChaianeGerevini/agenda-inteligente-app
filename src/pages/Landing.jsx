@@ -9,9 +9,7 @@ export default function Landing() {
       localStorage.setItem("referral", code);
     }
 
-    window.location.replace(
-      "https://bqsh6c.mimo.run/index.html"
-    );
+    window.location.replace("https://bqsh6c.mimo.run/index.html");
   }, [code]);
 
   return <p>Redirecionando...</p>;
