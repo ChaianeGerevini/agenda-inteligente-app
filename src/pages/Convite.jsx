@@ -16,52 +16,42 @@ function Convite() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
 
-  useEffect(() => {
+ useEffect(() => {
   if (codigo) {
     buscarConvite();
   }
 }, [codigo]);
 
-  async function buscarConvite() {
-    try {
-      const q = query(
-        collection(db, "convites"),
-        where("codigo", "==", codigo),
-        where("usado", "==", false)
-      );
+async function buscarConvite() {
+  try {
+    const q = query(
+      collection(db, "convites"),
+      where("codigo", "==", codigo),
+      where("usado", "==", false)
+    );
 
-      const snapshot = await getDocs(q);
+    const snapshot = await getDocs(q);
 
-      if (snapshot.empty) {
-        setErro("Este convite é inválido ou já foi utilizado.");
-        setLoading(false);
-        return;
-      }
-
-      const dados = snapshot.docs[0].data();
-
-const convite = {
-  id: snapshot.docs[0].id,
-  ...dados,
-};
-
-localStorage.setItem(
-  "conviteAgendly",
-  JSON.stringify(convite)
-);
-
-setLoading(false);
-
-navigate("/", {
-  replace: true,
-});
-
-return;
-
-    } catch (error) {
-      console.error(error);
-      setErro("Erro ao validar o convite.");
+    if (snapshot.empty) {
+      setErro("Este convite é inválido ou já foi utilizado.");
+      setLoading(false);
+      return;
     }
+
+    const conviteDoc = snapshot.docs[0];
+
+    const conviteId = conviteDoc.id;
+
+    navigate(`/login?convite=${conviteId}`, {
+      replace: true,
+    });
+
+  } catch (error) {
+    console.error(error);
+    setErro("Erro ao validar o convite.");
+  } finally {
+    setLoading(false);
+  }
 
   }
 

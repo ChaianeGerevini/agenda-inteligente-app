@@ -8,11 +8,8 @@ export default function Referral() {
 
   useEffect(() => {
     if (code) {
-      localStorage.setItem("referral", code);
-    }
-
-    if (auth.currentUser) {
-      navigate("/Faturamento", { replace: true });
+      // só redireciona com parâmetro
+      navigate(`/login?ref=${code}`, { replace: true });
     } else {
       navigate("/", { replace: true });
     }
