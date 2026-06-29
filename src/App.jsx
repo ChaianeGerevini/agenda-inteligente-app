@@ -24,6 +24,8 @@ function App() {
     path="/i/:code"
     element={<Referral />}
 />
+<Route path="/r/:code" element={<Landing />} />
+<Route path="/login" element={<Login />} />
 
         <Route element={<MainLayout />}>
          <Route path="/Faturamento" element={<Dashboard />} />

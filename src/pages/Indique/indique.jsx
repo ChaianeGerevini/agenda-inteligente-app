@@ -92,12 +92,6 @@ if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
           <div style={styles.linkBox}>
             <input value={link} readOnly style={styles.input} />
 
-       <button
-    style={styles.button}
-    onClick={compartilhar}
->
-    Compartilhar
-</button>
 <button
   style={{
     ...styles.button,
