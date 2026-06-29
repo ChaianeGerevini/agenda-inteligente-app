@@ -81,7 +81,7 @@ await addDoc(collection(db, "equipe"), {
     await deleteDoc(doc(db, "equipe", id));
   }
 
-async function gerarConvite() {
+async function gerarConvite(profissional) {
 
   const codigo = Math.random()
     .toString(36)
@@ -89,16 +89,18 @@ async function gerarConvite() {
     .toUpperCase();
 
 
-  await addDoc(collection(db, "convites"), {
+ await addDoc(collection(db, "convites"), {
 
-    codigo,
-    empresaId: usuario.empresaId,
-    gestorId: usuario.uid,
+  codigo,
+  empresaId: usuario.empresaId,
+  gestorId: usuario.uid,
 
-    usado: false,
-    createdAt: new Date()
+  profissionalId: profissional.id,
 
-  });
+  usado: false,
+  createdAt: new Date()
+
+});
 
 
   return codigo;
@@ -106,27 +108,38 @@ async function gerarConvite() {
 
 async function enviarConvite(profissional) {
 
-  const codigo = await gerarConvite();
+const codigo = await gerarConvite(profissional);
 
   const link =
-    `https://agendly.app/convite/${codigo}`;
+    `${window.location.origin}/convite/${codigo}`;
 
-
-  const texto = encodeURIComponent(
+  const mensagem =
 `Olá ${profissional.nome}! 👋
 
 Você foi convidado para fazer parte da equipe no Agendly.
 
-Crie sua conta ou faça login pelo link abaixo:
+Cadastre-se pelo link:
 
-${link}
+${link}`;
 
-Após o acesso você estará conectado à equipe do seu gestor.`
-  );
+  if (navigator.share) {
 
+    try {
+
+      await navigator.share({
+        title: "Convite Agendly",
+        text: mensagem,
+        url: link
+      });
+
+      return;
+
+    } catch {}
+
+  }
 
   window.open(
-    `https://wa.me/55${profissional.telefone}?text=${texto}`,
+    `https://wa.me/55${profissional.telefone}?text=${encodeURIComponent(mensagem)}`,
     "_blank"
   );
 }

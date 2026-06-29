@@ -14,12 +14,13 @@ function Convite() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
-  const [convite, setConvite] = useState(null);
   const [erro, setErro] = useState("");
 
   useEffect(() => {
+  if (codigo) {
     buscarConvite();
-  }, []);
+  }
+}, [codigo]);
 
   async function buscarConvite() {
     try {
@@ -39,37 +40,29 @@ function Convite() {
 
       const dados = snapshot.docs[0].data();
 
-      setConvite({
-        id: snapshot.docs[0].id,
-        ...dados,
-      });
+const convite = {
+  id: snapshot.docs[0].id,
+  ...dados,
+};
+
+localStorage.setItem(
+  "conviteAgendly",
+  JSON.stringify(convite)
+);
+
+setLoading(false);
+
+navigate("/", {
+  replace: true,
+});
+
+return;
 
     } catch (error) {
       console.error(error);
       setErro("Erro ao validar o convite.");
     }
 
-    setLoading(false);
-  }
-
-
-  function entrar() {
-    localStorage.setItem(
-      "conviteAgendly",
-      JSON.stringify(convite)
-    );
-
-    navigate("/login");
-  }
-
-
-  function cadastrar() {
-    localStorage.setItem(
-      "conviteAgendly",
-      JSON.stringify(convite)
-    );
-
-    navigate("/cadastro");
   }
 
 
@@ -96,42 +89,7 @@ function Convite() {
       </div>
     );
   }
-
-
-  return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-
-        <div style={styles.logo}>
-          💙
-        </div>
-
-        <h1 style={styles.title}>
-          Bem-vindo ao Agendly
-        </h1>
-
-        <p style={styles.text}>
-          Você foi convidado para fazer parte de uma equipe no Agendly.
-          Faça login caso já tenha uma conta ou crie uma nova para começar.
-        </p>
-
-        <button
-          style={styles.primaryButton}
-          onClick={entrar}
-        >
-          Já tenho conta
-        </button>
-
-        <button
-          style={styles.secondaryButton}
-          onClick={cadastrar}
-        >
-          Criar minha conta
-        </button>
-
-      </div>
-    </div>
-  );
+  return null;
 }
 
 

@@ -25,29 +25,6 @@ import {
   serverTimestamp
 } from "firebase/firestore";
 
-async function criarEmpresaSePlus(user, userData) {
-  if (userData?.plano !== "plus") return;
-  if (userData?.empresaId) return;
-
-  const empresaRef = await addDoc(collection(db, "empresas"), {
-    nome: "Minha Empresa",
-    ownerId: user.uid,
-    plano: "plus",
-    createdAt: serverTimestamp(),
-  });
-
-  await setDoc(
-    doc(db, "usuarios", user.uid),
-    {
-      empresaId: empresaRef.id,
-      role: "gestor",
-      plano: "plus",
-    },
-    { merge: true }
-  );
-
-  return empresaRef.id;
-}
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -55,11 +32,14 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
-  const [searchParams] = useSearchParams();
-const ref = searchParams.get("ref");
-const conviteSalvo = JSON.parse(
-  localStorage.getItem("conviteAgendly")
-);
+
+
+ 
+const conviteSalvo = JSON.parse(localStorage.getItem("conviteAgendly") || "null");
+const conviteId = conviteSalvo?.id || null;
+const referral = localStorage.getItem("referral");
+
+
   const navigate = useNavigate();
   
 const recuperarSenha = async () => {
@@ -82,106 +62,102 @@ async function cadastrar() {
   setErro("");
 
   try {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      senha
-    );
-
+    const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
     const user = userCredential.user;
 
     const referralCode = generateReferralCode(email);
-    // 🏢 Cria empresa automaticamente durante o período de teste
-const empresaRef = await addDoc(
-  collection(db, "empresas"),
-  {
-    nome: "Minha Empresa",
-    ownerId: user.uid,
-    plano: "teste",
-    createdAt: serverTimestamp(),
+
+    let empresaId;
+    let gestorId;
+    let role = "gestor";
+
+    // 👇 CASO 1: convite de equipe
+    if (conviteId) {
+      const conviteSnap = await getDoc(doc(db, "convites", conviteId));
+     
+
+      if (!conviteSnap.exists()) {
+    throw new Error("Convite inválido");
   }
-);
-// 🎁 Teste grátis Premium por 15 dias
-const premiumTrial = new Date();
-premiumTrial.setDate(premiumTrial.getDate() + 15);
 
-await setDoc(doc(db, "usuarios", user.uid), {
-  email,
+  const convite = conviteSnap.data();
 
-  // 👤 identidade do usuário
-role: conviteSalvo ? "funcionario" : "gestor",
-  // 💳 plano
-  plano: "free",
-  statusAssinatura: "teste",
-  premiumUntil: premiumTrial,
+  empresaId = convite.empresaId;
+  gestorId = convite.gestorId;
+  role = "funcionario";
 
-  // 🏢 empresa
- empresaId: conviteSalvo
-  ? conviteSalvo.empresaId
-  : empresaRef.id,
-
- gestorId: conviteSalvo
-  ? conviteSalvo.gestorId
-  : user.uid,
-  
-  // 🔒 controle
-  bloqueado: false,
-  criadoEm: serverTimestamp(),
-  ultimoAcesso: serverTimestamp(),
-
-  // 🔗 indicações
-  referralCode,
-  referredBy: ref || null,
-  referralsCount: 0,
-});
-
-if (conviteSalvo) {
-  await updateDoc(
-    doc(db, "convites", conviteSalvo.id),
-    {
-      usado: true,
-      usuarioId: user.uid,
-      usadoEm: serverTimestamp(),
-    }
-  );
-
-  localStorage.removeItem("conviteAgendly");
+  await updateDoc(doc(db, "convites", conviteId), {
+    usado: true,
+    usuarioId: user.uid,
+    usadoEm: serverTimestamp(),
+  });
 }
 
-    if (ref) {
+    // 👇 CASO 2: cadastro normal OU indicação
+    else {
+      const empresaRef = await addDoc(collection(db, "empresas"), {
+        nome: "Minha Empresa",
+        ownerId: user.uid,
+        plano: "teste",
+        createdAt: serverTimestamp(),
+      });
+
+      empresaId = empresaRef.id;
+      gestorId = user.uid;
+    }
+
+    // 👇 salva usuário
+    await setDoc(doc(db, "usuarios", user.uid), {
+      email,
+      empresaId,
+      gestorId,
+      role,
+      plano: "free",
+      statusAssinatura: "teste",
+      premiumUntil: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+
+      criadoEm: serverTimestamp(),
+      ultimoAcesso: serverTimestamp(),
+
+      referralCode,
+      referredBy: referral || null,
+      referralsCount: 0,
+    });
+
+    // 👇 INDICAÇÃO (contabilizar quem indicou)
+    if (referral) {
       const q = query(
         collection(db, "usuarios"),
-        where("referralCode", "==", ref)
+        where("referralCode", "==", referral)
       );
 
       const snap = await getDocs(q);
+      if (!snap.empty) {
 
-      snap.forEach(async (docItem) => {
-        const userRef = doc(db, "usuarios", docItem.id);
+      for (const docItem of snap.docs) {
+        const refUser = doc(db, "usuarios", docItem.id);
 
         const atual = docItem.data().referralsCount || 0;
         const novo = atual + 1;
 
-        let updateData = {
-          referralsCount: novo
+        const updateData = {
+          referralsCount: novo,
         };
 
         if (novo >= 5) {
-          updateData.premiumUntil = new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          );
-
+          updateData.premiumUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
           updateData.referralsCount = 0;
         }
 
-        await updateDoc(userRef, updateData);
-      });
+        await updateDoc(refUser, updateData);
+      }
     }
+  }
 
     navigate("/Faturamento");
 
-  } catch (erro) {
-    setErro(erro.message);
+  } catch (err) {
+    setErro(err.message);
   } finally {
     setLoading(false);
   }
@@ -206,6 +182,7 @@ const userRef = doc(db, "usuarios", user.uid);
 const userSnap = await getDoc(userRef);
 const userData = userSnap.data();
 
+
 // atualiza último acesso
 await setDoc(
   userRef,
@@ -215,8 +192,6 @@ await setDoc(
   { merge: true }
 );
 
-// 🔥 AQUI É ONDE A EMPRESA É CRIADA
-await criarEmpresaSePlus(user, userData);
 
     navigate("/Faturamento");
   } catch (erro) {

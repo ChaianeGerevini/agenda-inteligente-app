@@ -11,6 +11,7 @@ import Admin from "./pages/Admin/admin";
 import Indique from "./pages/Indique/indique.jsx";
 import Sidebar from "./components/sidebar.jsx";
 import Convite from "./pages/Convite";
+import Referral from "./pages/Referral";
 
 
 import MainLayout from "./layouts/MainLayout";
@@ -19,6 +20,10 @@ function App() {
   return (
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route
+    path="/i/:code"
+    element={<Referral />}
+/>
 
         <Route element={<MainLayout />}>
          <Route path="/Faturamento" element={<Dashboard />} />

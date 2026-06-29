@@ -40,13 +40,43 @@ function Indique() {
     return <p style={styles.loading}>Usuário não encontrado</p>;
   }
 
-const link = `https://bqsh6c.mimo.run/index.html?ref=${userData.referralCode}`;
+const link = `${window.location.origin}/i/${userData.referralCode}`;
 
   const progress = Math.min(
     ((userData.referralsCount || 0) / 5) * 100,
     100
   );
 
+  const compartilhar = async () => {
+
+  const texto =
+`Estou usando o Agendly para organizar meus agendamentos.
+
+Cadastre-se pelo meu link:
+
+${link}`;
+
+if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+
+    try {
+
+      await navigator.share({
+        title: "Agendly",
+        text: texto,
+        url: link
+      });
+
+    } catch (e) {}
+
+  } else {
+
+    navigator.clipboard.writeText(link);
+
+    alert("Link copiado!");
+
+  }
+
+};
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -62,12 +92,25 @@ const link = `https://bqsh6c.mimo.run/index.html?ref=${userData.referralCode}`;
           <div style={styles.linkBox}>
             <input value={link} readOnly style={styles.input} />
 
-            <button
-              style={styles.button}
-              onClick={() => navigator.clipboard.writeText(link)}
-            >
-              Copiar
-            </button>
+       <button
+    style={styles.button}
+    onClick={compartilhar}
+>
+    Compartilhar
+</button>
+<button
+  style={{
+    ...styles.button,
+    background: "#EEF2FF",
+    color: "#4A6FFF"
+  }}
+  onClick={() => {
+    navigator.clipboard.writeText(link);
+    alert("Link copiado!");
+  }}
+>
+  Copiar
+</button>
           </div>
         </div>
 
