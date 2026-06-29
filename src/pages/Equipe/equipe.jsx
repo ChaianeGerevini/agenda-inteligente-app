@@ -110,8 +110,8 @@ async function enviarConvite(profissional) {
 
 const codigo = await gerarConvite(profissional);
 
-  const link =
-    `${window.location.origin}/convite/${codigo}`;
+const link =
+  `https://bqsh6c.mimo.run/index.html?convite=${codigo}`;
 
   const mensagem =
 `Olá ${profissional.nome}! 👋

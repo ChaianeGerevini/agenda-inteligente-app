@@ -42,9 +42,8 @@ async function buscarConvite() {
 
     const conviteId = conviteDoc.id;
 
-    navigate(`/login?convite=${conviteId}`, {
-      replace: true,
-    });
+ window.location.href =
+  `https://bqsh6c.mimo.run/index.html?convite=${conviteId}`;
 
   } catch (error) {
     console.error(error);

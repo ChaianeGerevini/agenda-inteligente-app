@@ -5,10 +5,8 @@ export default function RedirectLanding() {
   const { code } = useParams();
 
   useEffect(() => {
-    // salva referral (opcional)
-    localStorage.setItem("referral", code);
+    if (!code) return;
 
-    // SEMPRE manda pra landing externa
     window.location.href =
       `https://bqsh6c.mimo.run/index.html?ref=${code}`;
   }, [code]);
