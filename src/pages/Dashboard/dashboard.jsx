@@ -9,13 +9,23 @@ import {
 import { useUser } from "../../contexts/UserContext";
 
 import { auth, db } from "../../services/firebase";
-import PremiumGate from "../../components/PremiumGate";
 
 function Dashboard() {
-  const [user, setUser] = useState(null);
+  const [modalPlanos, setModalPlanos] = useState(false);
   const [equipe, setEquipe] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
-  const { usuario } = useUser();
+ 
+const { usuario, isPremium } = useUser();
+
+const premium = !!isPremium;
+
+const requirePremium = (callback) => {
+  if (!premium) {
+    setModalPlanos(true);
+    return;
+  }
+  callback?.();
+};
 
   // 🔐 AUTH
   useEffect(() => {
@@ -150,7 +160,6 @@ const ganhoProfissional =
   );
 
   return (
-      <PremiumGate tipo="premium">
     <div style={styles.container}>
       <h2 style={styles.title}>Olá 👋</h2>
 
@@ -164,18 +173,34 @@ const ganhoProfissional =
           <p style={styles.cardTitle}>Faturamento Bruto</p>
           <h3>R$ {faturamentoBruto.toFixed(2)}</h3>
         </div>
-
-        <div style={styles.card}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+<div
+  style={{
+    ...styles.card,
+    cursor: "pointer",
+    opacity: premium ? 1 : 0.5,
+  }}
+  onClick={() => requirePremium(() => {
+  console.log("abrir detalhe premium");
+})}
+>          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
           <p style={styles.cardTitle}>Faturamento Salão</p>
           <h3>R$ {faturamentoSalao.toFixed(2)}</h3>
         </div>
-
-        <div style={styles.card}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-check-icon lucide-user-round-check"><path d="M2 21a8 8 0 0 1 13.292-6"/><circle cx="10" cy="8" r="5"/><path d="m16 19 2 2 4-4"/></svg>
+        
+<div
+  style={{
+    ...styles.card,
+    cursor: "pointer",
+    opacity: premium ? 1 : 0.5,
+  }}
+ onClick={() => requirePremium(() => {
+  console.log("abrir detalhe premium");
+})}
+>          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-check-icon lucide-user-round-check"><path d="M2 21a8 8 0 0 1 13.292-6"/><circle cx="10" cy="8" r="5"/><path d="m16 19 2 2 4-4"/></svg>
           <p style={styles.cardTitle}>Profissionais</p>
           <h3>R$ {faturamentoProfissionais.toFixed(2)}</h3>
         </div> 
+                
 
         <div style={styles.card}>
           <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-sync-icon lucide-calendar-sync"><path d="M11 10v4h4"/><path d="m11 14 1.535-1.605a5 5 0 0 1 8 1.5"/><path d="M16 2v4"/><path d="m21 18-1.535 1.605a5 5 0 0 1-8-1.5"/><path d="M21 22v-4h-4"/><path d="M21 8.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4.3"/><path d="M3 10h4"/><path d="M8 2v4"/></svg>
@@ -187,8 +212,18 @@ const ganhoProfissional =
       {/* =========================
           👥 RANKING
       ========================= */}
-      <div style={styles.section}>
-        <h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg> Ranking da Equipe</h3>
+
+<div
+  style={{
+    ...styles.card,
+    cursor: "pointer",
+    opacity: premium ? 1 : 0.5,
+  }}
+  onClick={() => requirePremium(() => {
+  console.log("abrir detalhe premium");
+})}
+>
+          <h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg> Ranking da Equipe</h3>
 
         {rankingOrdenado.map((p) => (
           <div key={p.id} style={styles.item}>
@@ -206,14 +241,8 @@ const ganhoProfissional =
           </div>
         ))}
       </div>
-
-      {user && (
-        <div style={styles.footer}>
-          {user.email}
-        </div>
-      )}
+              
     </div>
-    </PremiumGate>
   );
 }
 

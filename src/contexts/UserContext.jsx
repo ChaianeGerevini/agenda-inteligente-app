@@ -28,9 +28,8 @@ export function UserProvider({ children }) {
 
   // Assinantes pagos
   if (
-    usuario?.plano === "premium" ||
-    usuario?.plano === "plus"
-  ) {
+    usuario?.plano === "premium"
+   ) {
     return true;
   }
 
@@ -49,26 +48,6 @@ export function UserProvider({ children }) {
 };
 
 
-const isPlus = () => {
-
-  // Assinante Plus real
-  if (usuario?.plano === "plus") {
-    return true;
-  }
-
-  // Teste grátis ou prêmio por indicação
-  if (usuario?.premiumUntil) {
-
-    const validade = usuario.premiumUntil.toDate
-      ? usuario.premiumUntil.toDate()
-      : new Date(usuario.premiumUntil);
-
-    if (validade > new Date()) {
-      return true;
-    }
-  }
-  return false;
-};
 const getPlanoAtual = () => {
 
 if (usuario?.plano === "premium") {
@@ -78,16 +57,6 @@ if (usuario?.plano === "premium") {
     descricao: "Assinatura ativa"
   };
 }
-  
-
-
-  if (usuario?.plano === "premium") {
-    return {
-     nome: "Premium Plus",
-tipo: "teste",
-      descricao: "Assinatura ativa"
-    };
-  }
 
 
   if (usuario?.premiumUntil) {
@@ -106,7 +75,7 @@ tipo: "teste",
 
       if (usuario?.statusAssinatura === "teste") {
         return {
-         nome: "Premium Plus",
+         nome: "Premium",
 tipo: "teste",
           descricao:
             `Teste grátis • ${diasRestantes} dias restantes`
@@ -115,7 +84,7 @@ tipo: "teste",
 
 
       return {
-       nome: "Premium Plus",
+       nome: "Premium",
 tipo: "bonus",
         descricao:
           `Bônus de indicação • ${diasRestantes} dias restantes`
@@ -244,7 +213,6 @@ value={{
   usuario,
   loadingUser,
   isPremium,
-  isPlus,
   getPlanoAtual
 }}
     >

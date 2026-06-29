@@ -1,7 +1,7 @@
 import { useUser } from "../contexts/UserContext";
 
-function PremiumGate({ tipo, children }) {
-const { usuario, loadingUser, isPremium, isPlus } = useUser();
+function PremiumGate({ children }) {
+const { usuario, loadingUser, isPremium } = useUser();
 
   if (loadingUser) {
     return null; // ou um loading spinner
@@ -11,15 +11,8 @@ const { usuario, loadingUser, isPremium, isPlus } = useUser();
     return <p>Usuário não autenticado</p>;
   }
 
-  const plano = usuario?.plano;
 
-// LIBERA PREMIUM
-if (tipo === "premium" && isPremium()) {
-  return children;
-}
-
-// LIBERA PLUS
-if (tipo === "plus" && isPlus()) {
+if (isPremium()) {
   return children;
 }
 
@@ -60,22 +53,21 @@ body: JSON.stringify({
 
         <p style={styles.descricao}>
           Esse recurso faz parte do plano{" "}
-          <b>{tipo === "plus" ? "Premium Plus" : "Premium"}</b>
+<b>Premium</b>
         </p>
 
-        <div style={styles.preco}>
-          {tipo === "plus" ? "R$ 29,90/mês" : "R$ 9,90/mês"}
-        </div>
+     <div style={styles.preco}>
+  R$ 19,90/mês
+  <br />
+  <small>ou R$ 199,90/ano</small>
+</div>
 
-        <button
-          style={styles.botao}
-          onClick={() =>
-            iniciarCheckout(tipo === "plus" ? "plus" : "premium")
-          }
-        >
-          Fazer upgrade
-        </button>
-
+<button
+  style={styles.botao}
+  onClick={() => iniciarCheckout("premium")}
+>
+  Fazer upgrade
+</button>
         <p style={styles.rodape}>Cancele quando quiser.</p>
       </div>
     </div>

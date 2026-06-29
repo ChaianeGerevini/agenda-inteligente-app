@@ -52,6 +52,9 @@ const [confirmarSenha, setConfirmarSenha] = useState("");
 const { getPlanoAtual } = useUser();
 
 const planoAtual = getPlanoAtual();
+const isPremium = planoAtual?.tipo === "premium";
+const isFree = planoAtual?.tipo === "free";
+const diasRestantes = planoAtual?.diasRestantes;
 const iniciarCheckout = async (plano) => {
   try {
     console.log("CLICK CHECKOUT:", plano);
@@ -296,9 +299,11 @@ if (hora < 12) {
 
 <h2> Planos</h2>
  <p>Escolha o plano ideal para seu negócio</p>
-<p>
-Plano atual: <strong>{planoAtual.nome}</strong>
-</p>
+<div style={styles.currentPlan}>
+    <h3>{planoAtual.nome}</h3>
+
+    <p>{planoAtual.descricao}</p>
+</div>
 
 <small
   style={{
@@ -313,46 +318,52 @@ Plano atual: <strong>{planoAtual.nome}</strong>
             <div style={styles.planCard}>
               <h3>Free</h3>
               <ul>
-                <li>✔ Agenda básica</li>
-                <li>✔ Clientes ilimitados</li>
-                <li>✖ Relatórios</li>
-                <li>✖ Suporte prioritário</li>
+            
+  <li>✔ Agenda completa</li>
+  <li>✔ Clientes ilimitados</li>
+  <li>✔ Até 1 profissional</li>
+  <li>✔ Faturamento </li>
+  <li>✔ Quantidade de atendimentos</li>
+
               </ul>
               <button style={styles.btn}>Plano básico</button>
             </div>
 
             <div style={{ ...styles.planCard, border: "2px solid #4A6FFF" }}>
               <h3>Premium</h3>
-              <ul>
-                <li>✔ Tudo do Free</li>
-                <li>✔ Relatórios de faturamento</li>
-                <li>✔ Agenda avançada</li>
-                <li>✔ Suporte rápido</li>
+             <ul>
+  <li>✔ Tudo do plano Free</li>
+  <li>✔ Profissionais ilimitados</li>
+  <li>✔ Faturamento da equipe</li>
+  <li>✔ Faturamento do negócio</li>
+  <li>✔ Ranking da equipe</li>
+  <li>✔ Remover anúncios</li>
               </ul>
-              <button
-  style={styles.btnPrimary}
-  onClick={() => iniciarCheckout("premium")}>
-                Fazer upgrade - R$ 9,90
-              </button>
+            {planoAtual.tipo === "premium" ? (
+  <button
+    style={{
+      ...styles.btn,
+      cursor: "default",
+      background: "#DCFCE7",
+      color: "#15803D",
+    }}
+    disabled
+  >
+    ✅ Você já possui o Premium
+  </button>
+) : (
+  <button
+    style={styles.btnPrimary}
+    onClick={() => iniciarCheckout("premium")}
+  >
+    Assinar Premium • R$ 19,90/mês
+    <br />
+    <small>ou R$ 199,90/ano</small>
+  </button>
+)}
             </div>
 
-            <div style={styles.planCard}>
-              <h3>Premium Plus</h3>
-              <ul>
-                <li>✔ Tudo do Premium</li>
-                <li>✔ Multi-profissionais</li>
-                <li>✔ Dashboard completo</li>
-                <li>✔ Suporte VIP</li>
-              </ul>
-              <button
-  style={styles.btnPrimary}
-  onClick={() => iniciarCheckout("plus")}>
-                Assinar - R$ 19,90
-              </button>
-            </div>
-
-    
-
+  
           </div>
         </div>
       )}
@@ -877,6 +888,13 @@ badge: {
   alignItems: "center",
   justifyContent: "center",
   padding: "0 5px",
+},
+currentPlan: {
+    background: "#EEF2FF",
+    border: "1px solid #C7D2FE",
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 20,
 },
 
 };

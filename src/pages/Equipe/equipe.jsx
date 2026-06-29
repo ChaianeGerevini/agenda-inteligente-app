@@ -14,9 +14,11 @@ import { db } from "../../services/firebase";
 import PremiumGate from "../../components/PremiumGate";
 import RoleGate from "../../components/RoleGate";
 import { useUser } from "../../contexts/UserContext";
+import UpgradeCard from "../../components/UpgradeCard";
 
 function Equipe() {
-  const { usuario } = useUser();
+const { usuario, isPremium } = useUser();
+const premium = !!isPremium;
   const [modalPerfil, setModalPerfil] = useState(false);
   const [profissionalSelecionado, setProfissionalSelecionado] = useState(null);
 
@@ -27,6 +29,16 @@ function Equipe() {
   const [membros, setMembros] = useState([]);
   const [cor, setCor] = useState("#4A6FFF");
   const [status, setStatus] = useState("ativo");
+
+  const [modalPlanos, setModalPlanos] = useState(false);
+
+const requirePremium = (callback) => {
+  if (!premium) {
+    setModalPlanos(true);
+    return;
+  }
+  callback?.();
+};
 
   function abrirPerfil(profissional) {
     setProfissionalSelecionado(profissional);
@@ -54,20 +66,27 @@ useEffect(() => {
 }, [usuario]);
 
   async function adicionarMembro() {
-    if (!nome) return;
-await addDoc(collection(db, "equipe"), {
-  nome,
-  cargo,
-  telefone,
-  comissao: Number(comissao || 0),
-  cor,
-  status,
+  if (!nome) return;
 
-  empresaId: usuario.empresaId,
-  gestorId: usuario.uid,
+  if (!premium && membros.length >= 1) {
+  setModalPlanos(true);
+  return;
+}
 
-  createdAt: new Date(),
-});
+  requirePremium(async () => {
+    await addDoc(collection(db, "equipe"), {
+      nome,
+      cargo,
+      telefone,
+      comissao: Number(comissao || 0),
+      cor,
+      status,
+
+      empresaId: usuario.empresaId,
+      gestorId: usuario.uid,
+
+      createdAt: new Date(),
+    });
 
     setNome("");
     setCargo("");
@@ -75,8 +94,8 @@ await addDoc(collection(db, "equipe"), {
     setComissao("");
     setCor("#4A6FFF");
     setStatus("ativo");
-  }
-
+  });
+}
   async function remover(id) {
     await deleteDoc(doc(db, "equipe", id));
   }
@@ -160,7 +179,6 @@ ${link}`;
   }
 
   return (
-      <PremiumGate tipo="plus">
             <RoleGate permitido={["gestor"]}>
     <div style={styles.container}>
       <h1 style={styles.title}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#65a9e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg> Equipe</h1>
@@ -378,10 +396,13 @@ ${link}`;
             </button>
           </div>
         </div>
+            )}
+
+      {modalPlanos && (
+        <UpgradeCard onClose={() => setModalPlanos(false)} />
       )}
     </div>
     </RoleGate>
-    </PremiumGate>
   );
 }
 
