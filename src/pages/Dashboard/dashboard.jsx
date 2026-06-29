@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore";
 import { useUser } from "../../contexts/UserContext";
 
+
 import { auth, db } from "../../services/firebase";
 
 function Dashboard() {
@@ -183,7 +184,7 @@ const ganhoProfissional =
   console.log("abrir detalhe premium");
 })}
 >          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-          <p style={styles.cardTitle}>Faturamento Salão</p>
+          <p style={styles.cardTitle}>Faturamento do negócio</p>
           <h3>R$ {faturamentoSalao.toFixed(2)}</h3>
         </div>
         

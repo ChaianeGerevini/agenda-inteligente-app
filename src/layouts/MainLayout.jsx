@@ -50,6 +50,14 @@ function MainLayout() {
 const [novaSenha, setNovaSenha] = useState("");
 const [confirmarSenha, setConfirmarSenha] = useState("");
 const { getPlanoAtual } = useUser();
+const precisaSerPremium = (callback) => {
+  if (!isPremium && (!diasRestantes || diasRestantes <= 0)) {
+    setModalPlanos(true);
+    return;
+  }
+
+  callback?.();
+};
 
 const planoAtual = getPlanoAtual();
 const isPremium = planoAtual?.tipo === "premium";
@@ -300,8 +308,6 @@ if (hora < 12) {
 <h2> Planos</h2>
  <p>Escolha o plano ideal para seu negócio</p>
 <div style={styles.currentPlan}>
-    <h3>{planoAtual.nome}</h3>
-
     <p>{planoAtual.descricao}</p>
 </div>
 
@@ -358,7 +364,6 @@ if (hora < 12) {
   >
     Assinar Premium • R$ 19,90/mês
     <br />
-    <small>ou R$ 199,90/ano</small>
   </button>
 )}
             </div>
