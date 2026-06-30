@@ -59,8 +59,7 @@ await addDoc(
     telefone,
     empresaId: usuario.empresaId, // 👈 ISSO FALTAVA
     observacao,
-empresaId: usuario.empresaId,
-usuarioId: usuario.uid,
+    usuarioId: usuario.uid,
     createdAt: new Date(),
   }
 );

@@ -28,11 +28,6 @@ const requirePremium = (callback) => {
   callback?.();
 };
 
-  // 🔐 AUTH
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return () => unsub();
-  }, []);
 
   // 📅 AGENDAMENTOS
 useEffect(() => {
