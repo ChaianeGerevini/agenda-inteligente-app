@@ -9,7 +9,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-
+import { useUser } from "../../contexts/UserContext";
 import { auth, db } from "../../services/firebase";
 import "./clientes.css";
 
@@ -21,7 +21,7 @@ const [clientes, setClientes] = useState([]);
   const [modalEditar, setModalEditar] = useState(false);
 
   const [clienteEditando, setClienteEditando] = useState(null);
-
+const { usuario } = useUser();
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [observacao, setObservacao] = useState("");
@@ -29,16 +29,12 @@ const [clientes, setClientes] = useState([]);
   const [clienteSelecionado, setClienteSelecionado] = useState("");
 
 useEffect(() => {
+if (!usuario?.empresaId) return;
 
-  if (!auth.currentUser) return;
+const q = query(
+  collection(db, "clientes"),
+  where("empresaId", "==", usuario.empresaId)
 
-  const q = query(
-    collection(db, "clientes"),
-    where(
-      "usuarioId",
-      "==",
-      auth.currentUser.uid
-    )
   );
 
   const unsub = onSnapshot(
@@ -68,7 +64,8 @@ await addDoc(
     nome,
     telefone,
     observacao,
-    usuarioId: auth.currentUser.uid,
+empresaId: usuario.empresaId,
+usuarioId: auth.currentUser.uid,
     createdAt: new Date(),
   }
 );

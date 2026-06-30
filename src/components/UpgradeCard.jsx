@@ -1,4 +1,5 @@
 import { useUser } from "../contexts/UserContext";
+import { useEffect, useState } from "react";
 
 function UpgradeCard({
   titulo = "Desbloqueie o Premium",
@@ -7,8 +8,11 @@ function UpgradeCard({
   showPrice = true,
 }) {
   const { usuario } = useUser();
+  const [checkoutUrl, setCheckoutUrl] = useState(null);
+const [loading, setLoading] = useState(false);
 
-  async function iniciarCheckout() {
+useEffect(() => {
+  async function prepararCheckout() {
     try {
       const res = await fetch(
         "https://backend-agenda-hgrd.onrender.com/checkout",
@@ -26,11 +30,46 @@ function UpgradeCard({
       const data = await res.json();
 
       if (data.url) {
-        window.location.href = data.url;
+        setCheckoutUrl(data.url);
       }
     } catch (e) {
-      alert("Erro ao iniciar checkout.");
+      console.log("Pré-checkout falhou");
     }
+  }
+
+  if (usuario?.email) {
+    prepararCheckout();
+  }
+}, [usuario]);
+
+ async function iniciarCheckout() {
+  try {
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+      return;
+    }
+
+    const res = await fetch(
+      "https://backend-agenda-hgrd.onrender.com/checkout",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plano: "premium",
+          email: usuario.email,
+          userId: usuario.uid,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  } catch (e) {
+    alert("Erro ao iniciar checkout.");
+  }
   }
 
   return (
@@ -56,7 +95,20 @@ function UpgradeCard({
         </div>
       )}
 
-      <button style={styles.botao} onClick={iniciarCheckout}>
+      <button style={styles.botao} onClick={async () => {
+  setLoading(true);
+
+  try {
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+      return;
+    }
+
+    await iniciarCheckout();
+  } finally {
+    setLoading(false);
+  }
+}}>
         Assinar Premium
       </button>
     </div>

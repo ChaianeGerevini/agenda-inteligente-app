@@ -24,6 +24,8 @@ function Agenda() {
 
   const [eventoSelecionado, setEventoSelecionado] = useState(null);
   const [statusAtendimento, setStatusAtendimento] = useState("");
+  const [modoEdicao, setModoEdicao] = useState(false);
+const [formEdit, setFormEdit] = useState(null);
 
   const [diaSelecionado, setDiaSelecionado] = useState(null);
   const [atendimentosDia, setAtendimentosDia] = useState([]);
@@ -308,11 +310,15 @@ function temConflito(novo) {
               setAtendimentosDia(lista);
             }}
         eventClick={(info) => {
-  setEventoSelecionado({
+  const data = {
     id: info.event.id,
-    titulo: info.event.title,
     ...info.event.extendedProps,
-  });
+  };
+
+  setEventoSelecionado(data);
+  setFormEdit(data); // 👈 importante
+  setModoEdicao(false);
+
 }}
 eventContent={(arg) => {
   const cor =
@@ -370,7 +376,60 @@ eventContent={(arg) => {
     {eventoSelecionado.profissional}
   </div>
 </div>
+{modoEdicao ? (
+  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <input
+      value={formEdit?.titulo || ""}
+      onChange={(e) =>
+        setFormEdit({ ...formEdit, titulo: e.target.value })
+      }
+    />
 
+    <input
+      value={formEdit?.cliente || ""}
+      onChange={(e) =>
+        setFormEdit({ ...formEdit, cliente: e.target.value })
+      }
+    />
+
+    <input
+      value={formEdit?.valor || ""}
+      onChange={(e) =>
+        setFormEdit({ ...formEdit, valor: e.target.value })
+      }
+    />
+
+    <button
+      onClick={async () => {
+        await updateDoc(doc(db, "agendamentos", formEdit.id), {
+          titulo: formEdit.titulo,
+          cliente: formEdit.cliente,
+          valor: formEdit.valor,
+        });
+
+        setEventoSelecionado(formEdit);
+        setModoEdicao(false);
+        alert("Atualizado!");
+      }}
+      style={{
+        background: "#4A6FFF",
+        color: "#fff",
+        padding: 10,
+        borderRadius: 10,
+        border: "none",
+      }}
+    >
+      Salvar
+    </button>
+
+    <button
+      onClick={() => setModoEdicao(false)}
+      style={{ background: "#eee", padding: 10, borderRadius: 10 }}
+    >
+      Cancelar
+    </button>
+  </div>
+) : null}
 
 <div style={styles.infoCard}>
   <span><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-clock-icon lucide-calendar-clock"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg> Data</span>
@@ -406,6 +465,12 @@ eventContent={(arg) => {
   onClick={enviarConfirmacaoWhatsApp}
 >
   Confirmar pelo WhatsApp
+</button>
+<button
+  style={{ ...styles.actionButton, background: "#4A6FFF", color: "#fff" }}
+  onClick={() => setModoEdicao(true)}
+>
+  Editar
 </button>
 
             <h4>Status</h4>
