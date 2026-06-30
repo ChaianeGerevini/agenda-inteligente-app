@@ -29,30 +29,24 @@ const { usuario } = useUser();
   const [clienteSelecionado, setClienteSelecionado] = useState("");
 
 useEffect(() => {
-if (!usuario?.empresaId) return;
+  if (!usuario?.empresaId) return;
 
-const q = query(
-  collection(db, "clientes"),
-  where("empresaId", "==", usuario.empresaId)
-
+  const q = query(
+    collection(db, "clientes"),
+    where("empresaId", "==", usuario.empresaId)
   );
 
-  const unsub = onSnapshot(
-    q,
-    (snapshot) => {
+  const unsub = onSnapshot(q, (snapshot) => {
+    const lista = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
-      const lista = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setClientes(lista);
-    }
-  );
+    setClientes(lista);
+  });
 
   return () => unsub();
-
-}, []);
+}, [usuario]);
 
   // ➕ NOVO CLIENTE
 async function salvarCliente() {
@@ -65,7 +59,7 @@ await addDoc(
     telefone,
     observacao,
 empresaId: usuario.empresaId,
-usuarioId: auth.currentUser.uid,
+usuarioId: usuario.uid,
     createdAt: new Date(),
   }
 );
