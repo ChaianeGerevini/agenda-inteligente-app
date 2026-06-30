@@ -307,9 +307,6 @@ if (hora < 12) {
 
 <h2> Planos</h2>
  <p>Escolha o plano ideal para seu negócio</p>
-<div style={styles.currentPlan}>
-    <p>{planoAtual.descricao}</p>
-</div>
 
 <small
   style={{
