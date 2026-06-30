@@ -137,24 +137,8 @@ Aguardamos você! 😊`
   );
 }
 
-const conflito = agendamentos.some((a) => {
-  if (a.id === formEdit.id) return false;
-  if (a.data !== formEdit.data) return false;
-  if (a.profissional !== formEdit.profissional) return false;
-
-  return (
-    (formEdit.horaInicio >= a.horaInicio &&
-      formEdit.horaInicio < a.horaFim) ||
-    (formEdit.horaFim > a.horaInicio &&
-      formEdit.horaFim <= a.horaFim)
-  );
-});
-
-if (conflito) {
-  alert("⛔ Conflito de horário!");
-  return;
-}
   async function atualizarStatus(id, status) {
+    
     try {
       await updateDoc(doc(db, "agendamentos", id), { status });
 
@@ -456,23 +440,38 @@ eventContent={(arg) => {
     <div style={styles.editActions}>
       <button
         style={styles.saveBtn}
-        onClick={async () => {
-          await updateDoc(
-            doc(db, "agendamentos", formEdit.id),
-            {
-              titulo: formEdit.titulo,
-              cliente: formEdit.cliente,
-              data: formEdit.data,
-              horaInicio: formEdit.horaInicio,
-              horaFim: formEdit.horaFim,
-              profissional: formEdit.profissional,
-              valor: Number(formEdit.valor || 0),
-            }
-          );
+          onClick={async () => {
+  const conflito = agendamentos.some((a) => {
+    if (a.id === formEdit.id) return false;
+    if (a.data !== formEdit.data) return false;
+    if (a.profissional !== formEdit.profissional) return false;
 
-          setEventoSelecionado(formEdit);
-          setModoEdicao(false);
-        }}
+    return (
+      (formEdit.horaInicio >= a.horaInicio &&
+        formEdit.horaInicio < a.horaFim) ||
+      (formEdit.horaFim > a.horaInicio &&
+        formEdit.horaFim <= a.horaFim)
+    );
+  });
+
+  if (conflito) {
+    alert("⛔ Conflito de horário!");
+    return;
+  }
+
+  await updateDoc(doc(db, "agendamentos", formEdit.id), {
+    titulo: formEdit.titulo,
+    cliente: formEdit.cliente,
+    data: formEdit.data,
+    horaInicio: formEdit.horaInicio,
+    horaFim: formEdit.horaFim,
+    profissional: formEdit.profissional,
+    valor: Number(formEdit.valor || 0),
+  });
+
+  setEventoSelecionado(formEdit);
+  setModoEdicao(false);
+}}
       >
         Salvar
       </button>
