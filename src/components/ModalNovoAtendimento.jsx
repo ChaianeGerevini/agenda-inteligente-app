@@ -40,17 +40,24 @@ const profissionalSelecionado = equipe.find(
 const [data, setData] = useState(hoje);
 
 useEffect(() => {
-  const unsub = onSnapshot(collection(db, "agendamentos"), (snapshot) => {
-    const lista = snapshot.docs.map((doc) => ({
+  if (!usuario?.empresaId) return;
+
+  const q = query(
+    collection(db, "clientes"),
+    where("empresaId", "==", usuario.empresaId)
+  );
+
+  const unsub = onSnapshot(q, (snapshot) => {
+    const lista = snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data(),
+      ...doc.data()
     }));
 
-    setAgendamentos(lista);
+    setClientes(lista);
   });
 
   return () => unsub();
-}, []);
+}, [usuario]);
 
 useEffect(() => {
 
@@ -101,19 +108,19 @@ const clientesFiltrados =
       )
     : [];
   if (!modalNovoAgendamento) return null;
+
 async function criarClienteRapido() {
 
   try {
 
-    await addDoc(
-      collection(db, "clientes"),
-      {
-        nome: cliente.trim(),
-       telefone: telefone.trim(),
-        observacao: "",
-        createdAt: new Date(),
-      }
-    );
+    await addDoc(collection(db, "clientes"), {
+  nome: cliente.trim(),
+  telefone: telefone.trim(),
+  observacao: "",
+  createdAt: new Date(),
+  empresaId: usuario.empresaId, // 🔥 ESSENCIAL
+  usuarioId: usuario.uid,
+});
 
     setCliente(cliente.trim());
 

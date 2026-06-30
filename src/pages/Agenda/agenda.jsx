@@ -23,7 +23,6 @@ function Agenda() {
   const [tituloCalendario, setTituloCalendario] = useState("");
 
   const [eventoSelecionado, setEventoSelecionado] = useState(null);
-  const [statusAtendimento, setStatusAtendimento] = useState("");
   const [modoEdicao, setModoEdicao] = useState(false);
 const [formEdit, setFormEdit] = useState(null);
 
@@ -137,6 +136,24 @@ Aguardamos você! 😊`
     "_blank"
   );
 }
+
+const conflito = agendamentos.some((a) => {
+  if (a.id === formEdit.id) return false;
+  if (a.data !== formEdit.data) return false;
+  if (a.profissional !== formEdit.profissional) return false;
+
+  return (
+    (formEdit.horaInicio >= a.horaInicio &&
+      formEdit.horaInicio < a.horaFim) ||
+    (formEdit.horaFim > a.horaInicio &&
+      formEdit.horaFim <= a.horaFim)
+  );
+});
+
+if (conflito) {
+  alert("⛔ Conflito de horário!");
+  return;
+}
   async function atualizarStatus(id, status) {
     try {
       await updateDoc(doc(db, "agendamentos", id), { status });
@@ -149,20 +166,7 @@ Aguardamos você! 😊`
       console.error(error);
     }
   }
-  async function editarAgendamento() {
-  try {
-    await updateDoc(doc(db, "agendamentos", eventoSelecionado.id), {
-      titulo: eventoSelecionado.titulo,
-      cliente: eventoSelecionado.cliente,
-      valor: eventoSelecionado.valor,
-      observacoes: eventoSelecionado.observacoes,
-    });
 
-    alert("Agendamento atualizado!");
-  } catch (error) {
-    console.error(error);
-  }
-}
 async function excluirAgendamento() {
   try {
     await deleteDoc(doc(db, "agendamentos", eventoSelecionado.id));
@@ -379,8 +383,7 @@ eventContent={(arg) => {
 
 {modoEdicao && (
   <div style={styles.editBox}>
-    
-    <h3 style={{ marginBottom: 10 }}>Editar agendamento</h3>
+    <h3>Editar agendamento</h3>
 
     <input
       style={styles.input}
@@ -388,7 +391,7 @@ eventContent={(arg) => {
       onChange={(e) =>
         setFormEdit({ ...formEdit, titulo: e.target.value })
       }
-      placeholder="Título"
+      placeholder="Serviço"
     />
 
     <input
@@ -398,6 +401,47 @@ eventContent={(arg) => {
         setFormEdit({ ...formEdit, cliente: e.target.value })
       }
       placeholder="Cliente"
+    />
+
+    {/* 👇 NOVO: DATA */}
+    <input
+      type="date"
+      style={styles.input}
+      value={formEdit?.data || ""}
+      onChange={(e) =>
+        setFormEdit({ ...formEdit, data: e.target.value })
+      }
+    />
+
+    {/* 👇 NOVO: HORÁRIO */}
+    <div style={{ display: "flex", gap: 8 }}>
+      <input
+        type="time"
+        style={styles.input}
+        value={formEdit?.horaInicio || ""}
+        onChange={(e) =>
+          setFormEdit({ ...formEdit, horaInicio: e.target.value })
+        }
+      />
+
+      <input
+        type="time"
+        style={styles.input}
+        value={formEdit?.horaFim || ""}
+        onChange={(e) =>
+          setFormEdit({ ...formEdit, horaFim: e.target.value })
+        }
+      />
+    </div>
+
+    {/* 👇 NOVO: PROFISSIONAL */}
+    <input
+      style={styles.input}
+      value={formEdit?.profissional || ""}
+      onChange={(e) =>
+        setFormEdit({ ...formEdit, profissional: e.target.value })
+      }
+      placeholder="Profissional"
     />
 
     <input
@@ -411,24 +455,31 @@ eventContent={(arg) => {
 
     <div style={styles.editActions}>
       <button
+        style={styles.saveBtn}
         onClick={async () => {
-          await updateDoc(doc(db, "agendamentos", formEdit.id), {
-            titulo: formEdit.titulo,
-            cliente: formEdit.cliente,
-            valor: formEdit.valor,
-          });
+          await updateDoc(
+            doc(db, "agendamentos", formEdit.id),
+            {
+              titulo: formEdit.titulo,
+              cliente: formEdit.cliente,
+              data: formEdit.data,
+              horaInicio: formEdit.horaInicio,
+              horaFim: formEdit.horaFim,
+              profissional: formEdit.profissional,
+              valor: Number(formEdit.valor || 0),
+            }
+          );
 
           setEventoSelecionado(formEdit);
           setModoEdicao(false);
         }}
-        style={styles.saveBtn}
       >
-        Salvar alterações
+        Salvar
       </button>
 
       <button
-        onClick={() => setModoEdicao(false)}
         style={styles.cancelBtn}
+        onClick={() => setModoEdicao(false)}
       >
         Cancelar
       </button>
