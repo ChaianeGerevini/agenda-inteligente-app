@@ -61,7 +61,6 @@ async function cadastrar() {
   setLoading(true);
   setErro("");
 
-   console.log("conviteSalvo:", conviteSalvo);
   console.log("conviteId:", conviteId);
   console.log("referral:", referral);
 
