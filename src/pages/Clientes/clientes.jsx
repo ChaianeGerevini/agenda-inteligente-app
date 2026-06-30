@@ -57,6 +57,7 @@ await addDoc(
   {
     nome,
     telefone,
+    empresaId: usuario.empresaId, // 👈 ISSO FALTAVA
     observacao,
 empresaId: usuario.empresaId,
 usuarioId: usuario.uid,
