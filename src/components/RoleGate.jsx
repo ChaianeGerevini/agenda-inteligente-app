@@ -11,31 +11,19 @@ function RoleGate({ permitido, children }) {
     return <div>Faça login para continuar.</div>;
   }
 
-  // 🔥 USAR ROLE (CORRETO)
-// 🔥 Libera gestor durante período de teste Premium Plus
-const estaEmTeste =
-  usuario?.premiumUntil &&
-  (
-    usuario.premiumUntil.toDate
-      ? usuario.premiumUntil.toDate()
-      : new Date(usuario.premiumUntil)
-  ) > new Date();
+  // Verifica apenas o papel do usuário
+  const roleAtual = usuario.role;
 
-const roleAtual =
-  estaEmTeste && usuario.role === "autonomo"
-    ? "gestor"
-    : usuario.role;
-
-
-if (!permitido.includes(roleAtual)) {
-      return (
+  if (!permitido.includes(roleAtual)) {
+    return (
       <div style={styles.card}>
         <h2>🔒 Acesso restrito</h2>
-        <p>Seu acesso não permite entrar nessa área.</p>
+
+        <p>Seu perfil não possui permissão para acessar esta área.</p>
 
         <div style={styles.info}>
-          Seu role atual:
-          <strong> {usuario.role}</strong>
+          Seu perfil atual:
+          <strong> {roleAtual}</strong>
         </div>
       </div>
     );

@@ -17,8 +17,8 @@ import { useUser } from "../../contexts/UserContext";
 import UpgradeCard from "../../components/UpgradeCard";
 
 function Equipe() {
-const { usuario, isPremium } = useUser();
-const premium = !!isPremium;
+const { usuario, hasAccess, isPremium } = useUser();
+
   const [modalPerfil, setModalPerfil] = useState(false);
   const [profissionalSelecionado, setProfissionalSelecionado] = useState(null);
 
@@ -33,7 +33,7 @@ const premium = !!isPremium;
   const [modalPlanos, setModalPlanos] = useState(false);
 
 const requirePremium = (callback) => {
-  if (!premium) {
+  if (!isPremium()) {
     setModalPlanos(true);
     return;
   }
@@ -55,6 +55,7 @@ useEffect(() => {
 
   const unsub = onSnapshot(q, (snapshot) => {
     const lista = snapshot.docs.map((doc) => ({
+      
       id: doc.id,
       ...doc.data(),
     }));
@@ -68,33 +69,40 @@ useEffect(() => {
   async function adicionarMembro() {
   if (!nome) return;
 
-  if (!premium && membros.length >= 1) {
+  const podeAdicionar = isPremium() || membros.length < 1;
+
+if (!podeAdicionar) {
   setModalPlanos(true);
   return;
 }
 
-  requirePremium(async () => {
-    await addDoc(collection(db, "equipe"), {
-      nome,
-      cargo,
-      telefone,
-      comissao: Number(comissao || 0),
-      cor,
-      status,
+async function adicionarMembro() {
+  if (!nome) return;
 
-      empresaId: usuario.empresaId,
-      gestorId: usuario.uid,
+  if (!podeAdicionarEquipe()) {
+    setModalPlanos(true);
+    return;
+  }
 
-      createdAt: new Date(),
-    });
-
-    setNome("");
-    setCargo("");
-    setTelefone("");
-    setComissao("");
-    setCor("#4A6FFF");
-    setStatus("ativo");
+  await addDoc(collection(db, "equipe"), {
+    nome,
+    cargo,
+    telefone,
+    comissao: Number(comissao || 0),
+    cor,
+    status,
+    empresaId: usuario.empresaId,
+    gestorId: usuario.uid,
+    createdAt: new Date(),
   });
+
+  setNome("");
+  setCargo("");
+  setTelefone("");
+  setComissao("");
+  setCor("#4A6FFF");
+  setStatus("ativo");
+}
 }
   async function remover(id) {
     await deleteDoc(doc(db, "equipe", id));
@@ -240,11 +248,25 @@ ${link}`;
 
       <h3 style={styles.subtitle}>Profissionais</h3>
 
+      
+
       {membros.length === 0 ? (
         <p style={{ color: "#666" }}>Nenhum profissional cadastrado</p>
       ) : (
-        membros.map((m) => (
-          <div key={m.id} style={styles.card}>
+        
+        membros.map((m, index) => (
+          
+          <div
+  key={m.id}
+  style={{
+    ...styles.card,
+    position: "relative",
+    overflow: "hidden",
+    filter: !isPremium() && index >= 1 ? "blur(2px)" : "none",
+    opacity: !isPremium() && index >= 1 ? 0.6 : 1,
+    pointerEvents: !isPremium() && index >= 1 ? "none" : "auto",
+  }}
+>
             <div>
               <div style={styles.headerCard}>
                 <div
@@ -299,6 +321,24 @@ ${link}`;
                 Remover
               </button>
             </div>
+            {!isPremium() && index >= 1 && (
+  <div style={styles.premiumOverlay}>
+    <div style={styles.premiumBox}>
+      <div style={styles.premiumTitle}>🔒 Limite atingido</div>
+
+      <div style={styles.premiumText}>
+        No plano gratuito você pode ter apenas 1 profissional.
+      </div>
+
+      <button
+        style={styles.premiumButton}
+        onClick={() => setModalPlanos(true)}
+      >
+        Fazer upgrade
+      </button>
+    </div>
+  </div>
+)}
           </div>
 
         ))
@@ -551,6 +591,47 @@ closeX: {
   background: "transparent",
   cursor: "pointer",
   fontSize: 18,
+},
+premiumOverlay: {
+  position: "absolute",
+  inset: 0,
+  background: "rgba(0,0,0,0.55)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backdropFilter: "blur(2px)",
+},
+
+premiumBox: {
+  background: "#fff",
+  padding: 16,
+  borderRadius: 14,
+  textAlign: "center",
+  width: "85%",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+},
+
+premiumTitle: {
+  fontWeight: 700,
+  marginBottom: 6,
+  fontSize: 14,
+},
+
+premiumText: {
+  fontSize: 12,
+  color: "#666",
+  marginBottom: 12,
+},
+
+premiumButton: {
+  background: "#4A6FFF",
+  color: "#fff",
+  border: "none",
+  padding: 10,
+  borderRadius: 10,
+  cursor: "pointer",
+  fontWeight: 600,
+  width: "100%",
 },
 };
 

@@ -110,22 +110,24 @@ async function cadastrar() {
     }
 
     // 👇 salva usuário
-    await setDoc(doc(db, "usuarios", user.uid), {
-      email,
-      empresaId,
-      gestorId,
-      role,
-      plano: "free",
-      statusAssinatura: "teste",
-      premiumUntil: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+  await setDoc(doc(db, "usuarios", user.uid), {
+  email,
+  empresaId,
+  gestorId,
+  role,
 
-      criadoEm: serverTimestamp(),
-      ultimoAcesso: serverTimestamp(),
+  plano: "trial",
+  premiumUntil: serverTimestamp(
+    new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+  ),
 
-      referralCode,
-      referredBy: referral || null,
-      referralsCount: 0,
-    });
+  createdAt: serverTimestamp(),
+  lastLogin: serverTimestamp(),
+
+  referralCode,
+  referredBy: referral || null,
+  referralsCount: 0,
+});
 
     // 👇 INDICAÇÃO (contabilizar quem indicou)
     if (referral) {

@@ -24,19 +24,24 @@ export function UserProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  const isPremium = () => {
+const isPremium = () => {
 
-  // Assinantes pagos
-  if (
-    usuario?.plano === "premium"
-   ) {
+  // Premium pago
+  if (usuario?.plano === "premium") {
     return true;
   }
 
+  // Trial novo (15 dias)
+  if (usuario?.plano === "trial" && usuario?.trialFim) {
+    const validade = usuario.trialFim.toDate
+      ? usuario.trialFim.toDate()
+      : new Date(usuario.trialFim);
 
-  // Premium por teste ou indicação
+    return validade > new Date();
+  }
+
+  // Compatibilidade legado
   if (usuario?.premiumUntil) {
-
     const validade = usuario.premiumUntil.toDate
       ? usuario.premiumUntil.toDate()
       : new Date(usuario.premiumUntil);
@@ -46,60 +51,91 @@ export function UserProvider({ children }) {
 
   return false;
 };
+const isTrialActive = () => {
+  if (!usuario?.trialFim) return false;
 
+  const fim = usuario.trialFim.toDate
+    ? usuario.trialFim.toDate()
+    : new Date(usuario.trialFim);
+
+  return new Date() < fim;
+};
+
+const hasAccess = () => {
+  return isPremium() || isTrialActive();
+};
+
+const isBlocked = () => {
+  return !hasAccess();
+};
 
 const getPlanoAtual = () => {
 
-if (usuario?.plano === "premium") {
-  return {
-    nome: "Premium",
-    tipo: "premium",
-    descricao: "Assinatura ativa"
-  };
-}
+  // PREMIUM
+  if (usuario?.plano === "premium") {
+    return {
+      nome: "Premium",
+      tipo: "premium",
+      descricao: "Assinatura ativa"
+    };
+  }
 
+  // TRIAL NOVO
+  if (usuario?.plano === "trial" && usuario?.trialFim) {
 
+    const validade = usuario.trialFim.toDate
+      ? usuario.trialFim.toDate()
+      : new Date(usuario.trialFim);
+
+    const diasRestantes = Math.ceil(
+      (validade - new Date()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (validade > new Date()) {
+      return {
+        nome: "Premium (Trial)",
+        tipo: "trial",
+        descricao: `Teste grátis • ${diasRestantes} dias restantes`
+      };
+    }
+
+    return {
+      nome: "Free",
+      tipo: "expirado",
+      descricao: "Trial expirado"
+    };
+  }
+
+  // LEGADO (premiumUntil)
   if (usuario?.premiumUntil) {
 
     const validade = usuario.premiumUntil.toDate
       ? usuario.premiumUntil.toDate()
       : new Date(usuario.premiumUntil);
 
-
     if (validade > new Date()) {
 
       const diasRestantes = Math.ceil(
-        (validade - new Date()) /
-        (1000 * 60 * 60 * 24)
+        (validade - new Date()) / (1000 * 60 * 60 * 24)
       );
 
-      if (usuario?.statusAssinatura === "teste") {
-        return {
-         nome: "Premium",
-tipo: "teste",
-          descricao:
-            `Teste grátis • ${diasRestantes} dias restantes`
-        };
-      }
-
-
       return {
-       nome: "Premium",
-tipo: "bonus",
-        descricao:
-          `Bônus de indicação • ${diasRestantes} dias restantes`
+        nome: "Premium",
+        tipo: usuario?.statusAssinatura === "teste" ? "trial_legado" : "bonus",
+        descricao: `Premium ativo • ${diasRestantes} dias restantes`
       };
-
     }
   }
 
-
+  // FREE
   return {
     nome: "Free",
     tipo: "free",
     descricao: "Plano gratuito"
   };
 };
+
+const trialCriadoRef = useRef(false);
 
   useEffect(() => {
 
@@ -140,29 +176,33 @@ tipo: "bonus",
 
   const dados = snapshot.data();
 
+// =======================================
+// AUTO TRIAL (NOVO USUÁRIO)
+// =======================================
 
-  // ⏰ Verifica se o período Premium expirou
-  if (
-    dados.premiumUntil &&
-    dados.plano === "free"
-  ) {
+const jaTemPlano = !!dados.plano;
+const jaTemTrial = !!dados.trialFim;
 
-    const validade = dados.premiumUntil.toDate
-      ? dados.premiumUntil.toDate()
-      : new Date(dados.premiumUntil);
+if (!jaTemPlano && !jaTemTrial && !trialCriadoRef.current) {
 
+  trialCriadoRef.current = true;
 
-    if (validade < new Date()) {
+  const agora = new Date();
+  const fim = new Date();
+  fim.setDate(agora.getDate() + 15);
 
-      updateDoc(ref, {
-        premiumUntil: null,
-        statusAssinatura: "expirado"
-      });
+  updateDoc(ref, {
+    plano: "trial",
+    statusAssinatura: "trial",
+    trialInicio: agora,
+    trialFim: fim,
+  });
 
-      dados.premiumUntil = null;
-      dados.statusAssinatura = "expirado";
-    }
-  }
+  dados.plano = "trial";
+  dados.statusAssinatura = "trial";
+  dados.trialInicio = agora;
+  dados.trialFim = fim;
+}
 
 
   setUsuario({
@@ -208,19 +248,31 @@ tipo: "bonus",
 
 
   return (
-    <UserContext.Provider
-value={{
-  usuario,
-  loadingUser,
-  isPremium,
-  getPlanoAtual
-}}
-    >
+   <UserContext.Provider
+  value={{
+    usuario,
+    loadingUser,
+    isPremium,
+    getPlanoAtual,
+    maxEquipe: usuario?.plano === "premium" ? Infinity : 1,
+
+    // 🔥 NOVO
+    isTrialActive,
+    hasAccess,
+    isBlocked,
+  }}
+>
+      
       {children}
     </UserContext.Provider>
   );
 }
 
+export function podeAdicionarMembro(usuario, totalEquipe) {
+  if (usuario?.plano === "premium") return true;
+
+  return totalEquipe < 1;
+}
 
 export function useUser() {
   return useContext(UserContext);

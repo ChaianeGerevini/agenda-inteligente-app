@@ -16,9 +16,10 @@ function Dashboard() {
   const [equipe, setEquipe] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
  
-const { usuario, isPremium } = useUser();
+const { usuario, hasAccess } = useUser();
 
-const premium = !!isPremium;
+const premium = hasAccess();
+const bloqueadoPremium = !premium;
 
 const requirePremium = (callback) => {
   if (!premium) {
@@ -169,33 +170,67 @@ const ganhoProfissional =
           <p style={styles.cardTitle}>Faturamento Bruto</p>
           <h3>R$ {faturamentoBruto.toFixed(2)}</h3>
         </div>
-<div
-  style={{
-    ...styles.card,
-    cursor: "pointer",
-    opacity: premium ? 1 : 0.5,
-  }}
-  onClick={() => requirePremium(() => {
-  console.log("abrir detalhe premium");
-})}
->          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-          <p style={styles.cardTitle}>Faturamento do negócio</p>
-          <h3>R$ {faturamentoSalao.toFixed(2)}</h3>
+<div style={{ position: "relative" }}>
+  <div
+    style={{
+      ...styles.card,
+      filter: bloqueadoPremium ? "blur(2px)" : "none",
+      opacity: bloqueadoPremium ? 0.6 : 1,
+    }}
+  >
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+         <p style={styles.cardTitle}>Faturamento do negócio</p>
+    <h3>R$ {faturamentoSalao.toFixed(2)}</h3>
+  </div>
+  {bloqueadoPremium && (
+    <div style={styles.premiumOverlay}>
+      <div style={styles.premiumBox}>
+        <div style={{ fontWeight: 700 }}>Relatório Premium</div>
+        <div style={{ fontSize: 12 }}>
+          Veja o faturamento detalhado do salão
         </div>
+
+        <button
+          style={styles.premiumButton}
+          onClick={() => setModalPlanos(true)}
+        >
+          Desbloquear
+        </button>
+      </div>
+    </div>
+  )}
+</div>
         
-<div
-  style={{
-    ...styles.card,
-    cursor: "pointer",
-    opacity: premium ? 1 : 0.5,
-  }}
- onClick={() => requirePremium(() => {
-  console.log("abrir detalhe premium");
-})}
->          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-check-icon lucide-user-round-check"><path d="M2 21a8 8 0 0 1 13.292-6"/><circle cx="10" cy="8" r="5"/><path d="m16 19 2 2 4-4"/></svg>
-          <p style={styles.cardTitle}>Profissionais</p>
-          <h3>R$ {faturamentoProfissionais.toFixed(2)}</h3>
-        </div> 
+<div style={{ position: "relative" }}>
+  <div
+    style={{
+      ...styles.card,
+      filter: bloqueadoPremium ? "blur(2px)" : "none",
+      opacity: bloqueadoPremium ? 0.6 : 1,
+    }}
+  >
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round-check-icon lucide-user-round-check"><path d="M2 21a8 8 0 0 1 13.292-6"/><circle cx="10" cy="8" r="5"/><path d="m16 19 2 2 4-4"/></svg>
+         <p style={styles.cardTitle}>Profissionais</p>
+    <h3>R$ {faturamentoProfissionais.toFixed(2)}</h3>
+  </div>
+    {bloqueadoPremium && (
+    <div style={styles.premiumOverlay}>
+      <div style={styles.premiumBox}>
+        <div style={{ fontWeight: 700 }}>Relatório Premium</div>
+        <div style={{ fontSize: 12 }}>
+          Veja ganhos por profissional
+        </div>
+
+        <button
+          style={styles.premiumButton}
+          onClick={() => setModalPlanos(true)}
+        >
+          Desbloquear
+        </button>
+      </div>
+    </div>
+  )}
+</div>
                 
 
         <div style={styles.card}>
@@ -209,34 +244,48 @@ const ganhoProfissional =
           👥 RANKING
       ========================= */}
 
-<div
-  style={{
-    ...styles.card,
-    cursor: "pointer",
-    opacity: premium ? 1 : 0.5,
-  }}
-  onClick={() => requirePremium(() => {
-  console.log("abrir detalhe premium");
-})}
->
+<div style={{ position: "relative" }}>
+  <div
+    style={{
+      ...styles.card,
+      filter: bloqueadoPremium ? "blur(2px)" : "none",
+      opacity: bloqueadoPremium ? 0.6 : 1,
+    }}
+  >
           <h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39a6e6ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg> Ranking da Equipe</h3>
 
-        {rankingOrdenado.map((p) => (
-          <div key={p.id} style={styles.item}>
-            <div>
-              <strong>{p.nome}</strong>
+    {rankingOrdenado.map((p) => (
+      <div key={p.id} style={styles.item}>
+        <div>
+          <strong>{p.nome}</strong>
+          <div style={styles.sub}>{p.qtd} atendimentos</div>
+        </div>
 
-              <div style={styles.sub}>
-                {p.qtd} atendimentos
-              </div>
-            </div>
-
-            <div style={styles.valor}>
-              R$ {p.totalBruto.toFixed(2)}
-            </div>
-          </div>
-        ))}
+        <div style={styles.valor}>
+          R$ {p.totalBruto.toFixed(2)}
+        </div>
       </div>
+    ))}
+  </div>
+
+  {bloqueadoPremium && (
+    <div style={styles.premiumOverlay}>
+      <div style={styles.premiumBox}>
+        <div style={{ fontWeight: 700 }}>Ranking Premium</div>
+        <div style={{ fontSize: 12 }}>
+          Veja performance completa da equipe
+        </div>
+
+        <button
+          style={styles.premiumButton}
+          onClick={() => setModalPlanos(true)}
+        >
+          Fazer upgrade
+        </button>
+      </div>
+    </div>
+  )}
+</div>
               
     </div>
   );
@@ -342,6 +391,35 @@ const styles = {
     fontSize: 12,
     color: "#9CA3AF",
   },
+  premiumOverlay: {
+  position: "absolute",
+  inset: 0,
+  background: "rgba(0,0,0,0.45)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 20,
+},
+
+premiumBox: {
+  background: "#fff",
+  padding: 14,
+  borderRadius: 12,
+  textAlign: "center",
+  width: "80%",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+},
+
+premiumButton: {
+  marginTop: 8,
+  padding: "8px 12px",
+  border: "none",
+  borderRadius: 8,
+  background: "#4A6FFF",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: 600,
+},
 };
 
 export default Dashboard;
