@@ -83,13 +83,9 @@ function Admin() {
     (u) => u.plano === "premium"
   ).length;
 
-  const premiumPlus = usuarios.filter(
-    (u) => u.plano === "premium_plus"
-  ).length;
-
+ 
   const receita =
-    premium * 19.9 +
-    premiumPlus * 39.9;
+    premium * 19.9;
 
   const responderChamado = async () => {
     if (!resposta.trim()) return;
