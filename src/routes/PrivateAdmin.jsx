@@ -32,7 +32,7 @@ export default function PrivateAdmin({ children }) {
 
   if (loading) return <p>Carregando...</p>;
 
-  if (!isAdmin) return <Navigate to="./Admin" />;
+  if (!isAdmin) return <Navigate to="./Admin/admin.jsx" />;
 
   return children;
 }
