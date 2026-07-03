@@ -82,7 +82,39 @@ function Admin() {
   const premium = usuarios.filter(
     (u) => u.plano === "premium"
   ).length;
+const trial = usuarios.filter(
+  (u) => u.statusAssinatura === "teste"
+).length;
 
+const ativos = usuarios.filter((u) => {
+  if (!u.ultimoAcesso) return false;
+
+  const ultimo =
+    u.ultimoAcesso.toDate?.() ??
+    new Date(u.ultimoAcesso);
+
+  const limite = new Date();
+  limite.setDate(limite.getDate() - 30);
+
+  return ultimo >= limite;
+}).length;
+
+const indicacoes = usuarios.reduce(
+  (total, usuario) =>
+    total + (usuario.referralsCount || 0),
+  0
+);
+
+const android = usuarios.filter(
+  (u) => u.plataforma === "android"
+).length;
+
+const ios = usuarios.filter(
+  (u) => u.plataforma === "ios"
+).length;
+
+// virá da Google Play futuramente
+const downloads = usuarios.length;
  
   const receita =
     premium * 19.9;
@@ -117,45 +149,76 @@ function Admin() {
 
   return (
     <div style={styles.container}>
-      <h1>Painel Administrativo</h1>
+<div style={styles.header}>
+  <div>
+    <h1 style={styles.titulo}>📊 Agenda Inteligente</h1>
+    <p style={styles.subtitulo}>
+      Painel Administrativo • Atualizado em tempo real
+    </p>
+  </div>
 
+  <div style={styles.online}>
+    <span style={styles.bolinha}></span>
+    Sistema Online
+  </div>
+</div>
       <div style={styles.grid}>
-        <Card
-          titulo="Usuários"
-          valor={usuarios.length}
-        />
+  <Card
+  icon="👥"
+  titulo="Usuários"
+  valor={usuarios.length}
+  cor="#2563EB"
+/>
 
-        <Card
-          titulo="Clientes"
-          valor={clientes.length}
-        />
+<Card
+  icon="📲"
+  titulo="Downloads"
+  valor={downloads}
+  cor="#7C3AED"
+/>
 
-        <Card
-          titulo="Agendamentos"
-          valor={agendamentos.length}
-        />
+<Card
+  icon="🟢"
+  titulo="Ativos"
+  valor={ativos}
+  cor="#16A34A"
+/>
 
-        <Card
-          titulo="Profissionais"
-          valor={equipe.length}
-        />
+<Card
+  icon="⭐"
+  titulo="Premium"
+  valor={premium}
+  cor="#EAB308"
+/>
 
-        <Card titulo="Free" valor={free} />
+<Card
+  icon="🧪"
+  titulo="Trial"
+  valor={trial}
+  cor="#F97316"
+/>
 
-        <Card
-          titulo="Premium"
-          valor={premium}
-        />
+<Card
+  icon="💰"
+  titulo="Receita"
+  valor={`R$ ${receita.toFixed(2)}`}
+  cor="#059669"
+/>
 
-        <Card
-          titulo="Receita"
-          valor={`R$ ${receita.toFixed(2)}`}
-        />
+<Card
+  icon="💬"
+  titulo="Chamados"
+  valor={chamados.length}
+  cor="#DC2626"
+/>
 
-        <Card
-          titulo="Chamados"
-          valor={chamados.length}
-        />
+<Card
+  icon="🎁"
+  titulo="Indicações"
+  valor={indicacoes}
+  cor="#EC4899"
+/>
+
       </div>
 
       <h2 style={{ marginTop: 40 }}>
@@ -251,35 +314,100 @@ function Admin() {
   );
 }
 
-function Card({ titulo, valor }) {
+function Card({ icon, titulo, valor, cor }) {
   return (
-    <div style={styles.card}>
-      <h3>{titulo}</h3>
-      <h2>{valor}</h2>
+    <div
+      style={{
+        ...styles.card,
+        borderTop: `5px solid ${cor}`,
+      }}
+    >
+      <div style={{ fontSize: 34 }}>{icon}</div>
+
+      <p
+        style={{
+          margin: "12px 0 6px",
+          color: "#6B7280",
+          fontWeight: 600,
+        }}
+      >
+        {titulo}
+      </p>
+
+      <h2
+        style={{
+          margin: 0,
+          fontSize: 30,
+          color: "#111827",
+        }}
+      >
+        {valor}
+      </h2>
     </div>
   );
-}
+}  
+
 
 const styles = {
   container: {
     padding: 20,
   },
+  header: {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 30,
+  flexWrap: "wrap",
+  gap: 20,
+},
+
+titulo: {
+  margin: 0,
+  fontSize: 32,
+  fontWeight: 700,
+  color: "#1F2937",
+},
+
+subtitulo: {
+  marginTop: 8,
+  color: "#6B7280",
+  fontSize: 15,
+},
+
+online: {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  background: "#ECFDF5",
+  color: "#16A34A",
+  padding: "10px 16px",
+  borderRadius: 30,
+  fontWeight: 600,
+},
+
+bolinha: {
+  width: 10,
+  height: 10,
+  borderRadius: "50%",
+  background: "#22C55E",
+},
 
   grid: {
     display: "grid",
     gridTemplateColumns:
-      "repeat(auto-fit,minmax(150px,1fr))",
+"repeat(auto-fit,minmax(150px,1fr))",
     gap: 15,
     marginTop: 20,
   },
 
   card: {
-    background: "#fff",
-    padding: 20,
-    borderRadius: 16,
-    boxShadow:
-      "0 4px 12px rgba(0,0,0,.08)",
-  },
+  background: "#FFFFFF",
+  padding: 22,
+  borderRadius: 20,
+  boxShadow: "0 10px 30px rgba(0,0,0,.08)",
+  transition: ".25s",
+  cursor: "default",
+},
 
   listaChamados: {
     display: "flex",
