@@ -148,11 +148,6 @@ function Admin() {
         />
 
         <Card
-          titulo="Premium+"
-          valor={premiumPlus}
-        />
-
-        <Card
           titulo="Receita"
           valor={`R$ ${receita.toFixed(2)}`}
         />
