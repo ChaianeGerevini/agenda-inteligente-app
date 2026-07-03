@@ -18,7 +18,7 @@ export default function PrivateAdmin({ children }) {
 
       const snap = await getDoc(doc(db, "usuarios", user.uid));
 
-      if (snap.exists() && snap.data().role === "admin") {
+      if (snap.exists() && snap.data().role === "Admin") {
         setIsAdmin(true);
       } else {
         setIsAdmin(false);
