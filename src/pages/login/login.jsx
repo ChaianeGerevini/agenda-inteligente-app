@@ -7,7 +7,8 @@ import {
 } from "firebase/auth";
 
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../../services/firebase";
+import { auth, db, googleProvider } from "../../services/firebase";
+import { signInWithPopup } from "firebase/auth";
 import logo from "/src/assets/agendly-logo.jpg";
 import { generateReferralCode } from "/src/contexts/generateReferralCode.js";
 
@@ -167,7 +168,137 @@ async function cadastrar() {
     setLoading(false);
   }
 }
+async function entrarComGoogle() {
+  setLoading(true);
+  setErro("");
 
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+
+    const user = result.user;
+
+    const userRef = doc(db, "usuarios", user.uid);
+    const userSnap = await getDoc(userRef);
+
+    // Usuário já existe
+    if (userSnap.exists()) {
+
+      await updateDoc(userRef, {
+        ultimoAcesso: serverTimestamp(),
+      });
+
+      navigate("/Faturamento");
+      return;
+    }
+
+    // ========= PRIMEIRO LOGIN =========
+
+    const referralCode = generateReferralCode(user.email);
+
+    let empresaId;
+    let gestorId;
+    let role = "gestor";
+
+    // convite
+    if (conviteId) {
+
+      const conviteSnap = await getDoc(doc(db, "convites", conviteId));
+
+      if (!conviteSnap.exists()) {
+        throw new Error("Convite inválido");
+      }
+
+      const convite = conviteSnap.data();
+
+      empresaId = convite.empresaId;
+      gestorId = convite.gestorId;
+      role = "funcionario";
+
+      await updateDoc(doc(db, "convites", conviteId), {
+        usado: true,
+        usuarioId: user.uid,
+        usadoEm: serverTimestamp(),
+      });
+
+    } else {
+
+      const empresaRef = await addDoc(collection(db, "empresas"), {
+        nome: "Minha Empresa",
+        ownerId: user.uid,
+        plano: "teste",
+        createdAt: serverTimestamp(),
+      });
+
+      empresaId = empresaRef.id;
+      gestorId = user.uid;
+    }
+
+    await setDoc(userRef, {
+
+      email: user.email,
+      nome: user.displayName,
+      foto: user.photoURL,
+
+      empresaId,
+      gestorId,
+      role,
+
+      plano: "trial",
+
+      premiumUntil: new Date(
+        Date.now() + 15 * 24 * 60 * 60 * 1000
+      ),
+
+      createdAt: serverTimestamp(),
+      ultimoAcesso: serverTimestamp(),
+
+      referralCode,
+      referredBy: referral || null,
+      referralsCount: 0,
+    });
+
+    // contabiliza indicação
+    if (referral) {
+
+      const q = query(
+        collection(db, "usuarios"),
+        where("referralCode", "==", referral)
+      );
+
+      const snap = await getDocs(q);
+
+      for (const docItem of snap.docs) {
+
+        const atual = docItem.data().referralsCount || 0;
+
+        const updateData = {
+          referralsCount: atual + 1,
+        };
+
+        if (atual + 1 >= 5) {
+          updateData.premiumUntil = new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000
+          );
+          updateData.referralsCount = 0;
+        }
+
+        await updateDoc(doc(db, "usuarios", docItem.id), updateData);
+      }
+    }
+
+    navigate("/Faturamento");
+
+  } catch (err) {
+
+    console.error(err);
+    setErro(err.message);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+}
 async function entrar() {
   setLoading(true);
   setErro("");
@@ -254,6 +385,13 @@ await setDoc(
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>
+
+          <button
+    onClick={entrarComGoogle}
+    style={styles.googleButton}
+>
+    Continuar com Google
+</button>
 
           <button
             onClick={cadastrar}
@@ -375,6 +513,17 @@ linkButton: {
   cursor: "pointer",
   fontSize: 13,
   textDecoration: "underline",
+},
+googleButton: {
+  width: "100%",
+  padding: 14,
+  background: "#fff",
+  color: "#444",
+  border: "1px solid #dadce0",
+  borderRadius: 10,
+  cursor: "pointer",
+  fontWeight: "600",
+  fontSize: 16,
 },
 };
 
