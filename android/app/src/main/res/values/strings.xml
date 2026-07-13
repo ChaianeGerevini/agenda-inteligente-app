@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">agenda-inteligente</string>
+    <string name="app_name">Agendly</string>
     <string name="title_activity_main">agenda-inteligente</string>
     <string name="package_name">com.chaiane.agendainteligente</string>
     <string name="custom_url_scheme">com.chaiane.agendainteligente</string>
