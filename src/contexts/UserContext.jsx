@@ -27,7 +27,7 @@ const UserContext = createContext();
 export function UserProvider({ children }) {
 
   const [usuario, setUsuario] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
 
@@ -42,10 +42,11 @@ export function UserProvider({ children }) {
         // Saiu da conta
         if (!firebaseUser) {
           setUsuario(null);
-          setLoadingUser(false);
+          setLoading(false);
 
           if (unsubscribeUser) {
             unsubscribeUser();
+                unsubscribeUser = null;
           }
 
           return;

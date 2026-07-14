@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useUser } from "../../contexts/UserContext";
 import {
   loginEmail,
   registerEmail,
@@ -34,6 +35,23 @@ const referral = searchParams.get("ref");
 
 
   const navigate = useNavigate();
+    const { usuario, loadingUser } = useUser();
+
+    useEffect(()=>{
+
+
+if(!loadingUser && usuario){
+
+navigate("/Faturamento");
+
+}
+
+
+},[
+loadingUser,
+usuario
+]);
+
   
 const recuperarSenha = async () => {
   try {

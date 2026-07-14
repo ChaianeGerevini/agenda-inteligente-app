@@ -35,8 +35,8 @@ export default defineConfig({
       ],
 
       manifest: {
-        name: "Agenda Inteligente",
-        short_name: "Agenda",
+        name: "Agendly",
+        short_name: "Agendly",
         description: "Agenda Inteligente para profissionais autônomos.",
 
         theme_color: "#2563eb",

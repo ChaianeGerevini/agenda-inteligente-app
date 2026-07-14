@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useUser } from "./contexts/UserContext";
 
 import Login from "./pages/login/login.jsx";
 import Dashboard from "./pages/Dashboard/dashboard";
@@ -13,11 +14,36 @@ import Sidebar from "./components/sidebar.jsx";
 import Convite from "./pages/Convite";
 import Referral from "./pages/Referral";
 import Landing from "./pages/Landing";
+import PrivateRoute from "./routes/PrivateRoute";
 
 
 import MainLayout from "./layouts/MainLayout";
 
 function App() {
+  const {loadingUser} = useUser();
+
+
+if(loadingUser){
+
+return (
+
+<div style={{
+height:"100vh",
+display:"flex",
+alignItems:"center",
+justifyContent:"center"
+}}>
+
+<img 
+src="/src/assets/agendly-logo.jpg"
+width="100"
+/>
+
+</div>
+
+)
+
+}
   return (
       <Routes>
         <Route path="/" element={<Login />} />
@@ -27,7 +53,13 @@ function App() {
 />
 <Route path="/r/:code" element={<Landing />} />
 
-        <Route element={<MainLayout />}>
+        <Route 
+element={
+  <PrivateRoute>
+    <MainLayout />
+  </PrivateRoute>
+}
+>
          <Route path="/Faturamento" element={<Dashboard />} />
          
           <Route path="/Clientes" element={<Clientes />} />

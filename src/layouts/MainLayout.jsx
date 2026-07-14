@@ -5,6 +5,7 @@ import BottomNav from "../components/BottomNav";
 import ModalNovoAtendimento from "../components/ModalNovoAtendimento";
 import Sidebar from "../components/sidebar";
 import { useUser } from "../contexts/UserContext";
+import { signOut } from "firebase/auth";
 import logo from "/src/assets/agendly-logo.jpg";
 import {
   EmailAuthProvider,
@@ -57,6 +58,22 @@ const planoAtual = {
   diasRestantes: 0,
 };
 
+const fazerLogout = async () => {
+
+  try {
+
+    await signOut(auth);
+
+  } catch(error){
+
+    console.error(
+      "Erro ao sair:",
+      error
+    );
+
+  }
+
+};
 const isPremium = planoAtual.tipo === "premium";
 const isFree = planoAtual.tipo === "free";
 const diasRestantes = planoAtual.diasRestantes;
@@ -273,7 +290,7 @@ if (hora < 12) {
   setAba={setAbaSidebar}
   notificacoes={notificacoes}
   setNotificacoes={setNotificacoes}
-  onLogout={() => console.log("logout")}
+  onLogout={fazerLogout}
   onOpenPerfil={() => setModalPerfil(true)}
   onOpenSeguranca={() => setModalSeguranca(true)}
   onOpenPlanos={() => setModalPlanos(true)}
