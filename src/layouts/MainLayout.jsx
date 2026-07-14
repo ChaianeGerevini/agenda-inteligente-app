@@ -41,7 +41,6 @@ function MainLayout() {
   const [modalPerfil, setModalPerfil] = useState(false);
   const [modalSeguranca, setModalSeguranca] = useState(false);
   const [modalSuporte, setModalSuporte] = useState(false);
-  const [usuario, setUsuario] = useState(null);
   const [nomePerfil, setNomePerfil] = useState("");
   const [empresaPerfil, setEmpresaPerfil] = useState("");
   const [telefonePerfil, setTelefonePerfil] = useState("");
@@ -49,20 +48,21 @@ function MainLayout() {
  const [senhaAtual, setSenhaAtual] = useState("");
 const [novaSenha, setNovaSenha] = useState("");
 const [confirmarSenha, setConfirmarSenha] = useState("");
-const { getPlanoAtual } = useUser();
-const precisaSerPremium = (callback) => {
-  if (!isPremium && (!diasRestantes || diasRestantes <= 0)) {
-    setModalPlanos(true);
-    return;
-  }
+const { usuario } = useUser();
 
-  callback?.();
+const planoAtual = {
+  tipo: usuario?.plano || "free",
+  descricao:
+    usuario?.plano === "premium"
+      ? "Plano Premium"
+      : "Plano Gratuito",
+  diasRestantes: 0,
 };
 
-const planoAtual = getPlanoAtual();
-const isPremium = planoAtual?.tipo === "premium";
-const isFree = planoAtual?.tipo === "free";
-const diasRestantes = planoAtual?.diasRestantes;
+const isPremium = planoAtual.tipo === "premium";
+const isFree = planoAtual.tipo === "free";
+const diasRestantes = planoAtual.diasRestantes;
+
 const iniciarCheckout = async (plano) => {
   try {
     console.log("CLICK CHECKOUT:", plano);
@@ -200,19 +200,13 @@ async function carregarPerfil(uid) {
     setFotoPerfil(dados.fotoPerfil || "");
   }
 }
+const { usuario } = useUser();
+
 useEffect(() => {
-  const unsubscribe = onAuthStateChanged(
-    auth,
-    (user) => {
-      setUsuario(user);
-      if (user) {
-  carregarPerfil(user.uid);
-}
-    }
-    
-  );
-  return unsubscribe;
-}, []);
+  if (usuario?.uid) {
+    carregarPerfil(usuario.uid);
+  }
+}, [usuario]);
 const hora = new Date().getHours();
 
 let saudacao = "Boa noite";
