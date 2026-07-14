@@ -227,7 +227,9 @@ const referralCode =
             role:
               empresa.role,
 
-plano: "free",
+            plano: "free",
+
+            onboardingCompleto: false,
 
             createdAt:
               serverTimestamp(),

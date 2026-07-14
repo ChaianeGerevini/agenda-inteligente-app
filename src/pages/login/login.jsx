@@ -36,16 +36,27 @@ const referral = searchParams.get("ref");
 
   const navigate = useNavigate();
     const { usuario, loadingUser } = useUser();
+    const redirecionarUsuario = () => {
 
-    useEffect(()=>{
+  if(usuario?.onboardingCompleto){
 
+    navigate("/Faturamento");
 
-if(!loadingUser && usuario){
+  } else {
 
-navigate("/Faturamento");
+    navigate("/onboarding");
 
-}
+  }
 
+};
+
+useEffect(()=>{
+
+  if(!loadingUser && usuario){
+
+    redirecionarUsuario();
+
+  }
 
 },[
 loadingUser,
@@ -88,7 +99,7 @@ async function cadastrar(){
     });
 
 
-    navigate("/Faturamento");
+    navigate("/onboarding");
 
 
   } catch(err){
@@ -119,8 +130,7 @@ async function entrarComGoogle() {
       referral
     });
 
-    navigate("/Faturamento");
-
+navigate("/onboarding");
 
   } catch (err) {
 
@@ -151,10 +161,6 @@ async function entrar() {
     await atualizarUltimoAcesso(
       user.uid
     );
-
-
-    navigate("/Faturamento");
-
 
   } catch (erro) {
 

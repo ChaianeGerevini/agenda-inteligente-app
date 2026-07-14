@@ -16,6 +16,7 @@ import Referral from "./pages/Referral";
 import Landing from "./pages/Landing";
 import PrivateRoute from "./routes/PrivateRoute";
 import LoadingScreen from "./components/LoadingScreen";
+import Onboarding from "./pages/Onboarding/onboarding";
 
 
 import MainLayout from "./layouts/MainLayout";
@@ -37,7 +38,10 @@ if(loadingUser){
     element={<Referral />}
 />
 <Route path="/r/:code" element={<Landing />} />
-
+<Route
+ path="/onboarding"
+ element={<Onboarding />}
+/>
         <Route 
 element={
   <PrivateRoute>
@@ -52,6 +56,7 @@ element={
           <Route path="/agenda-dia" element={<AgendaDia />} />
           <Route path="/equipe" element={<Equipe />} />
           <Route path="/sidebar" element={<Sidebar />} />
+          
           <Route path="/indique" element={<Indique />} />
           <Route
   path="/convite/:codigo"
