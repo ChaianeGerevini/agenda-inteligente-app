@@ -42,7 +42,7 @@ const [loadingUser, setLoadingUser] = useState(true);
         // Saiu da conta
         if (!firebaseUser) {
           setUsuario(null);
-          setLoading(false);
+          setLoadingUser(false);
 
           if (unsubscribeUser) {
             unsubscribeUser();
