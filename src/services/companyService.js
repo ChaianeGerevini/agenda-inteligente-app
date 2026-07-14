@@ -155,8 +155,6 @@ export async function obterEmpresaDoUsuario(
 
 
 // Cria toda estrutura inicial do usuário
-console.log("USER GOOGLE:", user);
-console.log("DB:", db);
 export async function criarEstruturaInicial({
     
 
