@@ -6,6 +6,7 @@ import {
   where,
 } from "firebase/firestore";
 import { useUser } from "../../contexts/UserContext";
+import { db } from "../../services/firebase";
 
 function Dashboard() {
   const [modalPlanos, setModalPlanos] = useState(false);
