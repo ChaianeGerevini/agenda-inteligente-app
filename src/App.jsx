@@ -15,6 +15,7 @@ import Convite from "./pages/Convite";
 import Referral from "./pages/Referral";
 import Landing from "./pages/Landing";
 import PrivateRoute from "./routes/PrivateRoute";
+import LoadingScreen from "./components/LoadingScreen";
 
 
 import MainLayout from "./layouts/MainLayout";
@@ -25,23 +26,7 @@ function App() {
 
 if(loadingUser){
 
-return (
-
-<div style={{
-height:"100vh",
-display:"flex",
-alignItems:"center",
-justifyContent:"center"
-}}>
-
-<img 
-src="/src/assets/agendly-logo.jpg"
-width="100"
-/>
-
-</div>
-
-)
+  return <LoadingScreen />;
 
 }
   return (
