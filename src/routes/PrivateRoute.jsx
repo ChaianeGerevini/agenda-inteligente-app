@@ -1,20 +1,19 @@
 import { Navigate } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 
-export default function PrivateRoute({ children }) {
+export default function PrivateRoute({children}) {
 
-  const { usuario, loadingUser } = useUser();
+  const {
+    usuario,
+    loadingUser
+  } = useUser();
 
 
   if (loadingUser) {
-    return (
-      <div>
-        Carregando Agendly...
-      </div>
-    );
+
+    return null;
+
   }
-
-
   if (!usuario) {
     return <Navigate to="/" replace />;
   }
