@@ -4,7 +4,7 @@ import {
   loginEmail,
   registerEmail,
   loginGoogle,
-  recuperarSenhaFirebase,
+  recuperarSenha,
 } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
 import logo from "/src/assets/agendly-logo.jpg";
@@ -40,7 +40,7 @@ const recuperarSenha = async () => {
     setErro("");
     setMensagem("");
 
-    await recuperarSenhaFirebase(email);
+await recuperarSenha(email);
 
     setMensagem("📩 Enviamos um link de recuperação para o seu e-mail.");
   } catch (error) {
