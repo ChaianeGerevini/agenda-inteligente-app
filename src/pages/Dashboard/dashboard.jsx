@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   onSnapshot,
@@ -7,9 +6,6 @@ import {
   where,
 } from "firebase/firestore";
 import { useUser } from "../../contexts/UserContext";
-
-
-import { auth, db } from "../../services/firebase";
 
 function Dashboard() {
   const [modalPlanos, setModalPlanos] = useState(false);

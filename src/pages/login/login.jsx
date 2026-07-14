@@ -4,7 +4,7 @@ import {
   loginEmail,
   registerEmail,
   loginGoogle,
-  recuperarSenha,
+  recuperarSenha as recuperarSenhaAuth,
 } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
 import logo from "/src/assets/agendly-logo.jpg";
@@ -40,12 +40,12 @@ const recuperarSenha = async () => {
     setErro("");
     setMensagem("");
 
-await recuperarSenha(email);
+    await recuperarSenhaAuth(email);
 
     setMensagem("📩 Enviamos um link de recuperação para o seu e-mail.");
-  } catch (error) {
+  } catch {
     setMensagem("");
-    setErro("❌ Não foi possível enviar o e-mail. Verifique o endereço.");
+    setErro("❌ Não foi possível enviar o e-mail.");
   }
 };
 
