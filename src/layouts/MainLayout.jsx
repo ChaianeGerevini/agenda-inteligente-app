@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { auth } from "../services/firebase";
-import { onAuthStateChanged } from "firebase/auth";
 import { Outlet } from "react-router-dom";
 import BottomNav from "../components/BottomNav";
 import ModalNovoAtendimento from "../components/ModalNovoAtendimento";
@@ -30,7 +29,6 @@ function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [notificacoes, setNotificacoes] = useState([]);
-  const totalNotificacoes = notificacoes.length;
   const [abaSidebar, setAbaSidebar] = useState("perfil");
   const [mensagemSuporte, setMensagemSuporte] =
   useState("");
@@ -200,13 +198,7 @@ async function carregarPerfil(uid) {
     setFotoPerfil(dados.fotoPerfil || "");
   }
 }
-const { usuario } = useUser();
 
-useEffect(() => {
-  if (usuario?.uid) {
-    carregarPerfil(usuario.uid);
-  }
-}, [usuario]);
 const hora = new Date().getHours();
 
 let saudacao = "Boa noite";
