@@ -1,30 +1,22 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-} from "firebase/auth";
-
+  loginEmail,
+  registerEmail,
+  loginGoogle,
+  recuperarSenhaFirebase,
+} from "../../services/authService";
 import { useNavigate } from "react-router-dom";
-import { auth, db, googleProvider } from "../../services/firebase";
-import { signInWithPopup } from "firebase/auth";
 import logo from "/src/assets/agendly-logo.jpg";
-import { generateReferralCode } from "/src/contexts/generateReferralCode.js";
-
 
 import {
-  doc,
-  setDoc,
-  updateDoc,
-  query,
-  collection,
-  where,
-  getDocs,
-  getDoc,
-  addDoc,
-  serverTimestamp
-} from "firebase/firestore";
+  criarEstruturaInicial,
+} from "../../services/companyService";
+
+import {
+  atualizarUltimoAcesso,
+} from "../../services/userService";
+
 
 
 function Login() {
@@ -48,7 +40,7 @@ const recuperarSenha = async () => {
     setErro("");
     setMensagem("");
 
-    await sendPasswordResetEmail(auth, email);
+    await recuperarSenhaFirebase(email);
 
     setMensagem("📩 Enviamos um link de recuperação para o seu e-mail.");
   } catch (error) {
@@ -57,236 +49,60 @@ const recuperarSenha = async () => {
   }
 };
 
+async function cadastrar(){
 
-async function cadastrar() {
   setLoading(true);
   setErro("");
 
-  console.log("conviteId:", conviteId);
-  console.log("referral:", referral);
-
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-    const user = userCredential.user;
 
-    const referralCode = generateReferralCode(email);
-
-    let empresaId;
-    let gestorId;
-    let role = "gestor";
-
-    // 👇 CASO 1: convite de equipe
-    if (conviteId) {
-      const conviteSnap = await getDoc(doc(db, "convites", conviteId));
-     
-
-      if (!conviteSnap.exists()) {
-    throw new Error("Convite inválido");
-  }
-
-  const convite = conviteSnap.data();
-
-  empresaId = convite.empresaId;
-  gestorId = convite.gestorId;
-  role = "funcionario";
-
-  await updateDoc(doc(db, "convites", conviteId), {
-    usado: true,
-    usuarioId: user.uid,
-    usadoEm: serverTimestamp(),
-  });
-}
-
-    // 👇 CASO 2: cadastro normal OU indicação
-    else {
-      const empresaRef = await addDoc(collection(db, "empresas"), {
-        nome: "Minha Empresa",
-        ownerId: user.uid,
-        plano: "teste",
-        createdAt: serverTimestamp(),
-      });
-
-      empresaId = empresaRef.id;
-      gestorId = user.uid;
-    }
-
-    // 👇 salva usuário
-  await setDoc(doc(db, "usuarios", user.uid), {
-  email,
-  empresaId,
-  gestorId,
-  role,
-
-  plano: "trial",
-  premiumUntil: serverTimestamp(
-    new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-  ),
-
-  createdAt: serverTimestamp(),
-  lastLogin: serverTimestamp(),
-
-  referralCode,
-  referredBy: referral || null,
-  referralsCount: 0,
-});
-
-    // 👇 INDICAÇÃO (contabilizar quem indicou)
-    if (referral) {
-      const q = query(
-        collection(db, "usuarios"),
-        where("referralCode", "==", referral)
+    const user =
+      await registerEmail(
+        email,
+        senha
       );
 
-      const snap = await getDocs(q);
-      if (!snap.empty) {
 
-      for (const docItem of snap.docs) {
-        const refUser = doc(db, "usuarios", docItem.id);
-
-        const atual = docItem.data().referralsCount || 0;
-        const novo = atual + 1;
-
-        const updateData = {
-          referralsCount: novo,
-        };
-
-        if (novo >= 5) {
-          updateData.premiumUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-          updateData.referralsCount = 0;
-        }
-
-        await updateDoc(refUser, updateData);
-      }
-    }
-  }
-
-    navigate("/Faturamento");
-
-  } catch (err) {
-    setErro(err.message);
-  } finally {
-    setLoading(false);
-  }
-}
-async function entrarComGoogle() {
-  setLoading(true);
-  setErro("");
-
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-
-    const user = result.user;
-
-    const userRef = doc(db, "usuarios", user.uid);
-    const userSnap = await getDoc(userRef);
-
-    // Usuário já existe
-    if (userSnap.exists()) {
-
-      await updateDoc(userRef, {
-        ultimoAcesso: serverTimestamp(),
-      });
-
-      navigate("/Faturamento");
-      return;
-    }
-
-    // ========= PRIMEIRO LOGIN =========
-
-    const referralCode = generateReferralCode(user.email);
-
-    let empresaId;
-    let gestorId;
-    let role = "gestor";
-
-    // convite
-    if (conviteId) {
-
-      const conviteSnap = await getDoc(doc(db, "convites", conviteId));
-
-      if (!conviteSnap.exists()) {
-        throw new Error("Convite inválido");
-      }
-
-      const convite = conviteSnap.data();
-
-      empresaId = convite.empresaId;
-      gestorId = convite.gestorId;
-      role = "funcionario";
-
-      await updateDoc(doc(db, "convites", conviteId), {
-        usado: true,
-        usuarioId: user.uid,
-        usadoEm: serverTimestamp(),
-      });
-
-    } else {
-
-      const empresaRef = await addDoc(collection(db, "empresas"), {
-        nome: "Minha Empresa",
-        ownerId: user.uid,
-        plano: "teste",
-        createdAt: serverTimestamp(),
-      });
-
-      empresaId = empresaRef.id;
-      gestorId = user.uid;
-    }
-
-    await setDoc(userRef, {
-
-      email: user.email,
-      nome: user.displayName,
-      foto: user.photoURL,
-
-      empresaId,
-      gestorId,
-      role,
-
-      plano: "trial",
-
-      premiumUntil: new Date(
-        Date.now() + 15 * 24 * 60 * 60 * 1000
-      ),
-
-      createdAt: serverTimestamp(),
-      ultimoAcesso: serverTimestamp(),
-
-      referralCode,
-      referredBy: referral || null,
-      referralsCount: 0,
+    await criarEstruturaInicial({
+      user,
+      conviteId,
+      referral
     });
 
-    // contabiliza indicação
-    if (referral) {
-
-      const q = query(
-        collection(db, "usuarios"),
-        where("referralCode", "==", referral)
-      );
-
-      const snap = await getDocs(q);
-
-      for (const docItem of snap.docs) {
-
-        const atual = docItem.data().referralsCount || 0;
-
-        const updateData = {
-          referralsCount: atual + 1,
-        };
-
-        if (atual + 1 >= 5) {
-          updateData.premiumUntil = new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          );
-          updateData.referralsCount = 0;
-        }
-
-        await updateDoc(doc(db, "usuarios", docItem.id), updateData);
-      }
-    }
 
     navigate("/Faturamento");
+
+
+  } catch(err){
+
+    console.error(err);
+    setErro(err.message);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+
+}
+
+async function entrarComGoogle() {
+
+  setLoading(true);
+  setErro("");
+
+  try {
+
+    const user = await loginGoogle();
+
+    await criarEstruturaInicial({
+      user,
+      conviteId,
+      referral
+    });
+
+    navigate("/Faturamento");
+
 
   } catch (err) {
 
@@ -298,44 +114,44 @@ async function entrarComGoogle() {
     setLoading(false);
 
   }
+
 }
 async function entrar() {
+
   setLoading(true);
   setErro("");
 
   try {
-    const userCredential =
-      await signInWithEmailAndPassword(
-        auth,
+
+    const user =
+      await loginEmail(
         email,
         senha
       );
 
-const user = userCredential.user;
 
-// pega dados do usuário
-const userRef = doc(db, "usuarios", user.uid);
-const userSnap = await getDoc(userRef);
-const userData = userSnap.data();
-
-
-// atualiza último acesso
-await setDoc(
-  userRef,
-  {
-    ultimoAcesso: serverTimestamp(),
-  },
-  { merge: true }
-);
+    await atualizarUltimoAcesso(
+      user.uid
+    );
 
 
     navigate("/Faturamento");
+
+
   } catch (erro) {
-    setErro("Email ou senha inválidos");
+
+    setErro(
+      "Email ou senha inválidos"
+    );
+
+
   } finally {
+
     setLoading(false);
+
   }
-  }
+
+}
 
   return (
     <div style={styles.container}>

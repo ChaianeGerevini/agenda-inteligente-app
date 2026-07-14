@@ -20,10 +20,10 @@ useEffect(() => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            plano: "premium",
-            email: usuario.email,
-            userId: usuario.uid,
-          }),
+  plano: "premium",
+  email: usuario?.email,
+  userId: usuario?.uid,
+}),
         }
       );
 
@@ -54,11 +54,11 @@ useEffect(() => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plano: "premium",
-          email: usuario.email,
-          userId: usuario.uid,
-        }),
+     body: JSON.stringify({
+  plano: "premium",
+  email: usuario?.email,
+  userId: usuario?.uid,
+}),
       }
     );
 
@@ -95,7 +95,10 @@ useEffect(() => {
         </div>
       )}
 
-      <button style={styles.botao} onClick={async () => {
+      <button 
+  style={styles.botao} 
+  disabled={loading}
+  onClick={async () => {
   setLoading(true);
 
   try {
@@ -109,7 +112,7 @@ useEffect(() => {
     setLoading(false);
   }
 }}>
-        Assinar Premium
+        {loading ? "Abrindo checkout..." : "Assinar Premium"}
       </button>
     </div>
   );

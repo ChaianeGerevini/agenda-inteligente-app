@@ -1,5 +1,5 @@
 import { useUser } from "../contexts/UserContext";
-
+import UpgradeCard from "./UpgradeCard";
 function PremiumGate({ children }) {
 const { usuario, loadingUser, isPremium } = useUser();
 
@@ -16,62 +16,13 @@ if (isPremium()) {
   return children;
 }
 
-  // 🔒 BLOQUEADO → MOSTRA UPGRADE
-  const iniciarCheckout = async (planoEscolhido) => {
-    try {
-      const res = await fetch("https://backend-agenda-hgrd.onrender.com/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-body: JSON.stringify({
-  plano: planoEscolhido,
-  email: usuario?.email,
-  userId: usuario?.uid,
-}),
-      });
-
-      const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Erro ao iniciar checkout");
-      }
-    } catch (err) {
-  console.error("ERRO CHECKOUT:", err);
-  alert("Erro ao iniciar checkout");
-}
-  };
-
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.icon}>🔒</div>
-
-        <h2 style={styles.titulo}>Acesso bloqueado</h2>
-
-        <p style={styles.descricao}>
-          Esse recurso faz parte do plano{" "}
-<b>Premium</b>
-        </p>
-
-     <div style={styles.preco}>
-  R$ 19,90/mês
-  <br />
-  <small>ou R$ 199,90/ano</small>
-</div>
-
-<button
-  style={styles.botao}
-  onClick={() => iniciarCheckout("premium")}
->
-  Fazer upgrade
-</button>
-        <p style={styles.rodape}>Cancele quando quiser.</p>
-      </div>
-    </div>
-  );
+  <UpgradeCard
+    titulo="Recurso Premium"
+    descricao="Faça upgrade para liberar essa funcionalidade."
+    variant="card"
+  />
+);
 }
 
 const styles = {

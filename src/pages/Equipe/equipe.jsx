@@ -66,43 +66,42 @@ useEffect(() => {
   return () => unsub();
 }, [usuario]);
 
-  async function adicionarMembro() {
-  if (!nome) return;
-
-  const podeAdicionar = isPremium() || membros.length < 1;
-
-if (!podeAdicionar) {
-  setModalPlanos(true);
-  return;
-}
-
 async function adicionarMembro() {
-  if (!nome) return;
 
-  if (!podeAdicionarEquipe()) {
-    setModalPlanos(true);
-    return;
-  }
+ if (!nome) return;
 
-  await addDoc(collection(db, "equipe"), {
-    nome,
-    cargo,
-    telefone,
-    comissao: Number(comissao || 0),
-    cor,
-    status,
-    empresaId: usuario.empresaId,
-    gestorId: usuario.uid,
-    createdAt: new Date(),
-  });
 
-  setNome("");
-  setCargo("");
-  setTelefone("");
-  setComissao("");
-  setCor("#4A6FFF");
-  setStatus("ativo");
-}
+ if (!isPremium() && membros.length >= 1) {
+
+   setModalPlanos(true);
+
+   return;
+
+ }
+
+
+ await addDoc(collection(db,"equipe"), {
+
+ nome,
+ cargo,
+ telefone,
+ comissao:Number(comissao || 0),
+ cor,
+ status,
+ empresaId:usuario.empresaId,
+ gestorId:usuario.uid,
+ createdAt:new Date(),
+
+ });
+
+
+ setNome("");
+ setCargo("");
+ setTelefone("");
+ setComissao("");
+ setCor("#4A6FFF");
+ setStatus("ativo");
+
 }
   async function remover(id) {
     await deleteDoc(doc(db, "equipe", id));
