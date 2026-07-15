@@ -29,7 +29,40 @@ const { usuario, hasAccess, isPremium } = useUser();
   const [membros, setMembros] = useState([]);
   const [cor, setCor] = useState("#4A6FFF");
 
-  const [modalPlanos, setModalPlanos] = useState(false);
+
+const iniciarCheckout = async () => {
+
+  try {
+
+    const res = await fetch(
+      "https://backend-agenda-hgrd.onrender.com/checkout",
+      {
+        method: "POST",
+        headers:{
+          "Content-Type":"application/json",
+        },
+        body: JSON.stringify({
+          plano:"premium",
+          email:usuario.email,
+          userId:usuario.uid,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if(data.url){
+      window.location.href = data.url;
+    }
+
+  } catch(error){
+
+    console.error(error);
+    alert("Erro ao iniciar checkout");
+
+  }
+
+};
 
 const requirePremium = (callback) => {
   if (!isPremium()) {
@@ -338,7 +371,7 @@ ${link}`;
 
     <PremiumOverlay
       titulo="Recurso Premium "  
-      onUpgrade={() => setModalPlanos(true)}
+onUpgrade={iniciarCheckout}
     />
   </div>
 )}
@@ -423,10 +456,6 @@ ${link}`;
         </div>
             )}
 
-
-      {modalPlanos && (
-        <UpgradeCard onClose={() => setModalPlanos(false)} />
-      )}
     </div>
     </RoleGate>
   );

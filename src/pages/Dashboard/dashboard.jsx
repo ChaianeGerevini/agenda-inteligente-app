@@ -10,7 +10,6 @@ import { db } from "../../services/firebase";
 import PremiumOverlay from "../../components/PremiumOverlay";
 
 function Dashboard() {
-  const [modalPlanos, setModalPlanos] = useState(false);
   const [equipe, setEquipe] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
  
@@ -19,12 +18,38 @@ const { usuario, hasAccess } = useUser();
 const premium = hasAccess();
 const bloqueadoPremium = !premium;
 
-const requirePremium = (callback) => {
-  if (!premium) {
-    setModalPlanos(true);
-    return;
+const iniciarCheckout = async (plano) => {
+  try {
+
+    const res = await fetch(
+      "https://backend-agenda-hgrd.onrender.com/checkout",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plano,
+          email: usuario.email,
+          userId: usuario.uid,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Erro ao iniciar checkout");
+    }
+
+  } catch(error) {
+
+    console.error(error);
+    alert("Erro no pagamento");
+
   }
-  callback?.();
 };
 
 
@@ -184,7 +209,7 @@ const ganhoProfissional =
   <PremiumOverlay
     titulo="Relatório Premium"
     descricao="Veja o faturamento detalhado do salão"
-    onUpgrade={() => setModalPlanos(true)}
+    onUpgrade={() => iniciarCheckout("premium")}
   />
 )}
 </div>
@@ -206,7 +231,7 @@ const ganhoProfissional =
   <PremiumOverlay
     titulo="Relatório Premium"
     descricao="Veja ganhos por profissional"
-    onUpgrade={() => setModalPlanos(true)}
+onUpgrade={() => iniciarCheckout("premium")}
   />
 )}
 </div>
@@ -251,7 +276,7 @@ opacity: bloqueadoPremium ? 0.5 : 1,
   <PremiumOverlay
     titulo="Ranking Premium"
     descricao="Veja performance completa da equipe"
-    onUpgrade={() => setModalPlanos(true)}
+    onUpgrade={() => iniciarCheckout("premium")}
   />
 )}
 </div>
