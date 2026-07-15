@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { doc, updateDoc } from "firebase/firestore";
+import logo from "/src/assets/agendly-logo.jpg";
+
+
 
 import { db } from "../../services/firebase";
 import { useUser } from "../../contexts/UserContext";
@@ -147,13 +150,10 @@ duration:.5
 
 >
 
-
 <img
-
-src="/src/assets/agendly-logo.jpg"
-
+src={logo}
 style={styles.logo}
-
+alt="Agendly"
 />
 
 

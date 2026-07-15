@@ -196,17 +196,7 @@ style={{
 
 
 <div style={styles.badge}>
-
-⭐ Premium
-
-</div>
-
-
-
-<div style={styles.icon}>
-
-🔒
-
+Plano Premium
 </div>
 
 
@@ -229,27 +219,13 @@ style={{
 
 <div style={styles.lista}>
 
+<div>✓ Profissionais ilimitados</div>
 
-<div>
-✨ Profissionais ilimitados
-</div>
+<div>✓ Ranking da equipe</div>
 
-<div>
-📊 Relatórios avançados
-</div>
+<div>✓ Relatórios avançados</div>
 
-<div>
-🏆 Ranking da equipe
-</div>
-
-<div>
-🚫 Sem anúncios
-</div>
-
-<div>
-🎧 Suporte prioritário
-</div>
-
+<div>✓ Sem anúncios</div>
 
 </div>
 
@@ -270,8 +246,6 @@ R$ 19,90
 </div>
 
 }
-
-
 
 <button
 
@@ -337,76 +311,34 @@ const styles={
 
 
 container:{
-
-
 position:"relative",
-
 overflow:"hidden",
-
-background:
-
-"rgba(255,255,255,.75)",
-
-
-backdropFilter:
-
-"blur(20px)",
-
-
-borderRadius:28,
-
-
-padding:30,
-
-
+background:"#ffffff",
+borderRadius:24,
+padding:28,
 boxShadow:
-
-"0 25px 60px rgba(0,0,0,.15)",
-
-
+"0 20px 50px rgba(0,0,0,.12)",
 textAlign:"center",
-
-
 border:
-
-"1px solid rgba(255,255,255,.5)"
-
-
+"1px solid #e5e7eb"
 },
-
-
 
 card:{
-
-
-maxWidth:420,
-
+maxWidth:380,
 margin:"auto"
-
-
 },
 
-
-
 modal:{
-
-
 width:"100%",
-
 maxWidth:380
 
 },
 
 
 
-
 banner:{
-
-
 display:"flex",
-
 alignItems:"center",
-
 gap:20
 
 },
@@ -414,149 +346,66 @@ gap:20
 
 
 glow:{
-
-
 position:"absolute",
-
-width:180,
-
-height:180,
-
+width:150,
+height:150,
 background:"#4A6FFF",
-
-filter:"blur(80px)",
-
-opacity:.25,
-
-top:-60,
-
-right:-60
-
+filter:"blur(70px)",
+opacity:.15,
+top:-50,
+right:-50
 
 },
-
-
 
 badge:{
-
-
-position:"absolute",
-
-top:15,
-
-right:15,
-
-background:"#4A6FFF",
-
-color:"#fff",
-
-padding:"6px 12px",
-
+display:"inline-block",
+background:"#EEF2FF",
+color:"#4A6FFF",
+padding:"6px 14px",
 borderRadius:20,
-
 fontSize:12,
-
-fontWeight:700
-
-
+fontWeight:700,
+marginBottom:15
 },
-
-
-
-icon:{
-
-
-fontSize:50,
-
-marginBottom:10
-
-
-},
-
-
 
 descricao:{
-
-
 color:"#64748b",
-
-lineHeight:1.5
-
+lineHeight:1.5,
+fontSize:14
 },
-
-
 
 lista:{
-
-
+marginTop:20,
+background:"#F8FAFF",
+padding:15,
+borderRadius:14,
 textAlign:"left",
-
-background:"#EEF2FF",
-
-padding:20,
-
-borderRadius:18,
-
-lineHeight:2
-
-
+lineHeight:2,
+fontSize:14,
+color:"#374151"
 },
-
-
 
 preco:{
-
-
-fontSize:28,
-
-fontWeight:800,
-
 marginTop:20,
-
+fontSize:26,
+fontWeight:800,
 color:"#111827"
-
-
 },
 
-
-
 botao:{
-
-
 width:"100%",
-
-
 marginTop:20,
-
-
-padding:15,
-
-
-borderRadius:16,
-
-
+padding:14,
+borderRadius:14,
 border:"none",
-
-
 background:
-
-"linear-gradient(135deg,#4A6FFF,#2563eb)",
-
-
+"linear-gradient(135deg,#4A6FFF,#2563EB)",
 color:"#fff",
-
-
 fontWeight:700,
-
-
-fontSize:16,
-
-
+fontSize:15,
 cursor:"pointer"
 
-
 }
-
 
 
 }
