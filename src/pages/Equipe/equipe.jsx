@@ -11,7 +11,7 @@ where,
 } from "firebase/firestore";
 
 import { db } from "../../services/firebase";
-import PremiumGate from "../../components/PremiumGate";
+import PremiumOverlay from "../../components/PremiumOverlay";
 import RoleGate from "../../components/RoleGate";
 import { useUser } from "../../contexts/UserContext";
 import UpgradeCard from "../../components/UpgradeCard";
@@ -417,7 +417,6 @@ ${link}`;
             )}
 
             {!isPremium() && (
-
   <div style={styles.lockedCard}>
     <div style={styles.fakeContent}>
       <div style={styles.fakeTitle}></div>
@@ -426,12 +425,9 @@ ${link}`;
       <div style={styles.fakeLineSmall}></div>
     </div>
 
-    <button
-      style={styles.upgradeButton}
-      onClick={() => setModalPlanos(true)}
-    >
-      ⭐ Desbloquear Premium
-    </button>
+    <PremiumOverlay
+      onUpgrade={() => setModalPlanos(true)}
+    />
   </div>
 )}
 
@@ -631,19 +627,20 @@ premiumButton: {
   width: "100%",
 },
 lockedCard:{
-  position:"relative",
-  marginTop:15,
-  padding:20,
-  borderRadius:18,
-  background:"#fff",
-  overflow:"hidden",
-  boxShadow:"0 8px 30px rgba(0,0,0,.08)"
+    position:"relative",
+    marginTop:20,
+    borderRadius:20,
+    overflow:"hidden",
+    background:"#fff",
+    boxShadow:"0 10px 25px rgba(0,0,0,.06)"
 },
 
 fakeContent:{
-  filter:"blur(7px)",
-  opacity:.5,
-  pointerEvents:"none"
+    filter:"blur(6px)",
+    opacity:.35,
+    padding:20,
+    userSelect:"none",
+    pointerEvents:"none"
 },
 
 fakeTitle:{
