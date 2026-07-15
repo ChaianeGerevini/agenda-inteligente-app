@@ -623,11 +623,15 @@ eventContent={(arg) => {
 
 const styles = {
   container: {
-    padding: 14,
+    padding: 10,
+    position: "absolute",
     background: "#F5F7FB",
-    minHeight: "100vh",
+    minHeight: "100px",
+    maxHeight: "100px",
+    maxWidth:"400px",
     fontFamily: "Inter, Arial",
   },
+
   header: {
     background: "#fff",
     padding: 10,
@@ -638,6 +642,7 @@ const styles = {
     gap: 10,
     boxShadow: "0 4px 14px rgba(0,0,0,0.05)",
   },
+
   nav: { display: "flex", gap: 10 },
   arrow: {
     border: "none",
@@ -647,6 +652,7 @@ const styles = {
     fontSize: 18,
     cursor: "pointer",
   },
+
   tabs: { display: "flex", gap: 6 },
   tab: {
     border: "none",
@@ -656,6 +662,7 @@ const styles = {
     fontWeight: 600,
     fontSize: 12,
   },
+
   active: {
     border: "none",
     padding: "6px 8px",
@@ -665,6 +672,7 @@ const styles = {
     fontWeight: 600,
     fontSize: 12,
   },
+
   calendar: { background: "#fff", borderRadius: 16, padding: 2 },
   monthTitle: {
     flex: 1,
@@ -672,7 +680,8 @@ const styles = {
     fontSize: 14,
     fontWeight: 600,
     background: "rgba(255,255,255,0.6)",
-backdropFilter: "blur(4px)",
+    backdropFilter: "blur(4px)",
+
   },
   overlay: {
   position: "fixed",
@@ -686,14 +695,18 @@ backdropFilter: "blur(4px)",
   justifyContent: "center",
   zIndex: 9999,
 },
+
   modal: {
     position: "relative",
-    width: "90%",
+    width: "100%",
     maxWidth: 450,
+    height: "70vh",
+    maxHeight: "70vh",
     background: "#fff",
     borderRadius: 20,
-    padding: 20,
+    padding: 25,
   },
+
   closeIcon: {
     position: "absolute",
     top: 12,
@@ -707,27 +720,35 @@ backdropFilter: "blur(4px)",
     fontWeight: 700,
     cursor: "pointer",
   },
+
   statusContainer: { display: "flex", gap: 10, marginTop: 10 },
   statusButton: {
     flex: 1,
     border: "none",
+    marginBottom: 10,
     padding: 12,
     borderRadius: 12,
     fontWeight: 600,
   },
+  
   actionButton: {
     flex: 1,
     border: "none",
-    padding: 12,
+    display: "flex",
+    justifyContent: "center",
+    margin:10,
+    padding: 10,
     borderRadius: 12,
     cursor: "pointer",
   },
+
   cardAtendimento: {
     padding: 12,
     borderRadius: 12,
     background: "#F7F8FC",
     marginBottom: 10,
   },
+
 eventContent: {
   display: "flex",
   alignItems: "center",
@@ -783,6 +804,7 @@ valorCard: {
   fontSize: 20,
   textAlign: "center",
 },
+
 editBox: {
   background: "#F8FAFC",
   border: "1px solid #E5E7EB",
@@ -823,6 +845,7 @@ cancelBtn: {
   flex: 1,
   background: "#E5E7EB",
   color: "#111",
+  
   border: "none",
   padding: 10,
   borderRadius: 10,

@@ -28,7 +28,6 @@ const { usuario, hasAccess, isPremium } = useUser();
   const [comissao, setComissao] = useState(""); // % do SALÃO
   const [membros, setMembros] = useState([]);
   const [cor, setCor] = useState("#4A6FFF");
-  const [status, setStatus] = useState("ativo");
 
   const [modalPlanos, setModalPlanos] = useState(false);
 
@@ -100,7 +99,6 @@ async function adicionarMembro() {
  setTelefone("");
  setComissao("");
  setCor("#4A6FFF");
- setStatus("ativo");
 
 }
   async function remover(id) {
@@ -224,21 +222,12 @@ ${link}`;
           value={cor}
           onChange={(e) => setCor(e.target.value)}
           style={{
-            width: "90%",
-            height: 50,
+            width: "100%",
+            height: 30,
             marginBottom: 10,
             border: "none",
           }}
         />
-
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          style={styles.input}
-        >
-          <option value="ativo">Ativo</option>
-          <option value="inativo">Inativo</option>
-        </select>
 
         <button onClick={adicionarMembro} style={styles.button}>
           + Adicionar profissional
@@ -263,6 +252,7 @@ ${link}`;
     overflow: "hidden",
   }}
 >
+  
             <div>
               <div style={styles.headerCard}>
                 <div
@@ -282,16 +272,6 @@ ${link}`;
               {/* 🔥 aqui está a lógica correta */}
               <div style={styles.info}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#65a9e5ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-building-icon lucide-building"><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M12 6h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/><path d="M8 6h.01"/><path d="M9 22v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg> Salão recebe: {m.comissao || 0}%
-              </div>
-
-              <div
-                style={{
-                  marginTop: 6,
-                  fontWeight: 600,
-                  color: m.status === "ativo" ? "#16A34A" : "#DC2626",
-                }}
-              >
-                {m.status === "ativo" ? "🟢 Ativo" : "🔴 Inativo"}
               </div>
             </div>
 
@@ -321,6 +301,47 @@ ${link}`;
 
         ))
       )}
+
+      {!isPremium() && membros.length >= 1 && (
+  <div
+    style={{
+      ...styles.card,
+      position: "relative",
+      overflow: "hidden",
+    }}
+  >
+    <div
+      style={{
+        filter: "blur(4px)",
+        opacity: 0.45,
+        pointerEvents: "none",
+      }}
+    >
+      <div style={styles.headerCard}>
+        <div
+          style={{
+            width: 14,
+            height: 14,
+            borderRadius: "50%",
+            background: "#4A6FFF",
+          }}
+        />
+
+        <div style={styles.name}>Profissional Premium</div>
+      </div>
+
+      <div style={styles.info}>💼 Barbeiro</div>
+      <div style={styles.info}>📞 (00) 00000-0000</div>
+      <div style={styles.info}>🏢 Salão recebe: 40%</div>
+
+    </div>
+
+    <PremiumOverlay
+      titulo="Recurso Premium "  
+      onUpgrade={() => setModalPlanos(true)}
+    />
+  </div>
+)}
 
       {modalPerfil && profissionalSelecionado && (
         <div style={styles.overlay}>
@@ -389,25 +410,11 @@ ${link}`;
               }
               style={{
                 width: "100%",
-                height: 50,
+                height: 35,
                 marginTop: 10,
                 border: "none",
               }}
             />
-
-            <select
-              value={profissionalSelecionado.status}
-              onChange={(e) =>
-                setProfissionalSelecionado({
-                  ...profissionalSelecionado,
-                  status: e.target.value,
-                })
-              }
-              style={styles.input}
-            >
-              <option value="ativo">Ativo</option>
-              <option value="inativo">Inativo</option>
-            </select>
 
             <button style={styles.button} onClick={salvarPerfil}>
               Salvar Alterações
@@ -416,20 +423,6 @@ ${link}`;
         </div>
             )}
 
-            {!isPremium() && (
-  <div style={styles.lockedCard}>
-    <div style={styles.fakeContent}>
-      <div style={styles.fakeTitle}></div>
-      <div style={styles.fakeLine}></div>
-      <div style={styles.fakeLine}></div>
-      <div style={styles.fakeLineSmall}></div>
-    </div>
-
-    <PremiumOverlay
-      onUpgrade={() => setModalPlanos(true)}
-    />
-  </div>
-)}
 
       {modalPlanos && (
         <UpgradeCard onClose={() => setModalPlanos(false)} />
@@ -444,7 +437,7 @@ const styles = {
     padding: 20,
     paddingBottom: 90,
     background: "#f5f7fb",
-    minHeight: "100vh",
+    minHeight: "90vh",
     fontFamily: "arial",
   },
 
@@ -470,8 +463,9 @@ const styles = {
   },
 
   input: {
-    width: "90%",
-    padding: 12,
+    width: "100%",
+    padding: 15,
+      boxSizing: "border-box",
     marginBottom: 10,
     borderRadius: 10,
     border: "1px solid #e5e7eb",
@@ -480,13 +474,14 @@ const styles = {
   },
 
   button: {
-    width: "90%",
+    width: "100%",
     padding: 12,
-    background: "#4A6FFF",
+    background: "#4f99b0ff",
     color: "#fff",
     border: "none",
     borderRadius: 10,
     cursor: "pointer",
+    boxSizing: "border-box",
     fontWeight: 600,
   },
 
@@ -532,7 +527,7 @@ const styles = {
   display: "flex",
   alignItems: "center",
   gap: 8,
-  marginBottom: 8,
+  marginBottom: 6,
 },
 
 cardButtons: {
@@ -559,7 +554,8 @@ inviteButton: {
 overlay: {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.4)",
+  padding: 10,
+  background: "rgba(68, 65, 65, 0.4)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
@@ -567,13 +563,15 @@ overlay: {
 },
 
 modal: {
-  width: "90%",
+  width: "100%",
   maxWidth: 400,
   background: "#FFF",
   borderRadius: 20,
   padding: 20,
-  gap: 8,
+  gap: 6,
   position: "relative",
+  display: "flex",
+  flexDirection: "column"
 },
 
 closeX: {
@@ -583,110 +581,9 @@ closeX: {
   border: "none",
   background: "transparent",
   cursor: "pointer",
-  fontSize: 18,
-},
-premiumOverlay: {
-  position: "absolute",
-  inset: 0,
-  background: "rgba(0,0,0,0.55)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  backdropFilter: "blur(2px)",
+  fontSize: 15,
 },
 
-premiumBox: {
-  background: "#fff",
-  padding: 16,
-  borderRadius: 14,
-  textAlign: "center",
-  width: "85%",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-},
-
-premiumTitle: {
-  fontWeight: 700,
-  marginBottom: 6,
-  fontSize: 14,
-},
-
-premiumText: {
-  fontSize: 12,
-  color: "#666",
-  marginBottom: 12,
-},
-
-premiumButton: {
-  background: "#4A6FFF",
-  color: "#fff",
-  border: "none",
-  padding: 10,
-  borderRadius: 10,
-  cursor: "pointer",
-  fontWeight: 600,
-  width: "100%",
-},
-lockedCard:{
-    position:"relative",
-    marginTop:20,
-    borderRadius:20,
-    overflow:"hidden",
-    background:"#fff",
-    boxShadow:"0 10px 25px rgba(0,0,0,.06)"
-},
-
-fakeContent:{
-    filter:"blur(6px)",
-    opacity:.35,
-    padding:20,
-    userSelect:"none",
-    pointerEvents:"none"
-},
-
-fakeTitle:{
-  width:180,
-  height:18,
-  borderRadius:8,
-  background:"#dbe4ff",
-  marginBottom:15
-},
-
-fakeLine:{
-  width:"100%",
-  height:14,
-  borderRadius:8,
-  background:"#e5e7eb",
-  marginBottom:12
-},
-
-fakeLineSmall:{
-  width:"45%",
-  height:14,
-  borderRadius:8,
-  background:"#e5e7eb"
-},
-
-upgradeButton:{
-  position:"absolute",
-  left:"50%",
-  top:"50%",
-  transform:"translate(-50%,-50%)",
-
-  border:"none",
-  borderRadius:999,
-
-  padding:"14px 28px",
-
-  background:"linear-gradient(135deg,#4A6FFF,#2563eb)",
-
-  color:"#fff",
-
-  fontWeight:700,
-
-  cursor:"pointer",
-
-  boxShadow:"0 12px 30px rgba(37,99,235,.35)"
-},
 };
 
 export default Equipe;

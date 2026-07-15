@@ -58,8 +58,8 @@ function BottomNav() {
 
 const styles = {
   nav: {
-    position: "absolute",
-    bottom: 10,
+    position: "fixed",
+    bottom: 7,
     left: 10,
     right: 10,
     height: 70,

@@ -241,7 +241,7 @@ if (hora < 12) {
 
   <div style={styles.userInfo}>
     <h3 style={styles.userName}>
-{saudacao}, {nomePerfil || usuario?.displayName || "Usuário"} 👋    </h3>
+{saudacao}, {nomePerfil || usuario?.displayName || "Usuário"}     </h3>
 
     <p style={styles.userSub}>
 {empresaPerfil || "Bem-vindo ao Agendly"}    </p>
@@ -630,7 +630,8 @@ const styles = {
 },
 
   iconBtn2: {
-      position: "relative",
+  position: "absolute",
+  right: 65,
   width: 42,
   height: 42,
   marginLeft: 16,
@@ -645,7 +646,7 @@ const styles = {
   badge: {
     position: "absolute",
     top: -4,
-    right: -4,
+    right: -1,
     background: "#EF4444",
     color: "#fff",
     width: 18,
@@ -712,6 +713,7 @@ const styles = {
   },
 
   planModal: {
+      position: "relative",
   background: "#fff",
   margin: "auto",
   padding: 20,
@@ -754,6 +756,7 @@ btn: {
   marginBottom: 0,
   borderRadius: 50,
 },
+
 userArea: {
   display: "flex",
   alignItems: "center",
@@ -763,6 +766,7 @@ userArea: {
 userInfo: {
   display: "flex",
   flexDirection: "column",
+  
 },
 
 userName: {
@@ -871,13 +875,6 @@ clearBtn: {
   cursor: "pointer",
 },
 
-notificationCard: {
-  background: "#F9FAFB",
-  border: "1px solid #E5E7EB",
-  borderRadius: 12,
-  padding: 14,
-  marginBottom: 10,
-},
 badge: {
   position: "absolute",
   top: -5,

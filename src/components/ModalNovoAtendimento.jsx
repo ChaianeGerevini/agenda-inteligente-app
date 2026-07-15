@@ -465,11 +465,13 @@ const styles = {
 
   modal: {
     background: "#fff",
-    width: "90%",
-    maxWidth: 420,
+    width: "100%",
+    maxWidth: 400,
     borderRadius: 24,
+    margin: 10,
     padding: 20,
     boxShadow: "0 10px 30px rgba(0,0,0,.15)",
+    position: "relative"
   },
 
   title: {
@@ -506,9 +508,6 @@ const styles = {
     marginTop: 10,
     cursor: "pointer",
   },
-  autocomplete: {
-  position: "relative",
-},
 
 sugestoes: {
   position: "absolute",
@@ -559,8 +558,8 @@ label: {
 },
 closeIcon: {
   position: "absolute",
-  top: 12,
-  right: 12,
+  top: 15,
+  right: 15,
 
   width: 34,
   height: 34,
@@ -568,7 +567,7 @@ closeIcon: {
   border: "none",
   borderRadius: "50%",
 
-  background: "#F3F4F6",
+  background: "#f1f2f5ff",
 
   fontSize: 18,
   fontWeight: 700,
