@@ -124,13 +124,17 @@ async function entrarComGoogle() {
 
     const user = await loginGoogle();
 
+
     await criarEstruturaInicial({
       user,
       conviteId,
       referral
     });
 
-navigate("/onboarding");
+
+    // deixa o UserContext atualizar
+    // o useEffect vai decidir o destino
+
 
   } catch (err) {
 

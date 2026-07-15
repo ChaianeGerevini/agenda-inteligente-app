@@ -626,9 +626,9 @@ const styles = {
     padding: 10,
     position: "absolute",
     background: "#F5F7FB",
-    minHeight: "100px",
-    maxHeight: "100px",
-    maxWidth:"400px",
+    minHeight: "100%",
+    maxHeight: "100%",
+    maxWidth:"100%",
     fontFamily: "Inter, Arial",
   },
 
