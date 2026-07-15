@@ -216,6 +216,17 @@ async function carregarPerfil(uid) {
   }
 }
 
+useEffect(() => {
+
+  if(usuario?.uid){
+
+    carregarPerfil(usuario.uid);
+
+  }
+
+}, [usuario]);
+
+
 const hora = new Date().getHours();
 
 let saudacao = "Boa noite";

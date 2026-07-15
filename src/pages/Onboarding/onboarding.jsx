@@ -86,7 +86,7 @@ usuario.uid
 ),
 
 {
-
+ nome: usuario.nome,
 empresaPerfil:empresa,
 
 categoria,
