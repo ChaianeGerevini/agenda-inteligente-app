@@ -3,7 +3,6 @@ import {
 collection,
 addDoc,
 onSnapshot,
-deleteDoc,
 doc,
 updateDoc,
 query,
@@ -81,9 +80,10 @@ useEffect(() => {
   if (!usuario?.empresaId) return;
 
   const q = query(
-    collection(db, "equipe"),
-    where("empresaId", "==", usuario.empresaId)
-  );
+  collection(db, "equipe"),
+  where("empresaId", "==", usuario.empresaId),
+  where("status", "==", "ativo")
+);
 
   const unsub = onSnapshot(q, (snapshot) => {
     const lista = snapshot.docs.map((doc) => ({
@@ -119,7 +119,7 @@ async function adicionarMembro() {
  telefone,
  comissao:Number(comissao || 0),
  cor,
- status,
+ status: "ativo",
  empresaId:usuario.empresaId,
  gestorId:usuario.uid,
  createdAt:new Date(),
@@ -135,8 +135,10 @@ async function adicionarMembro() {
 
 }
   async function remover(id) {
-    await deleteDoc(doc(db, "equipe", id));
-  }
+  await updateDoc(doc(db, "equipe", id), {
+    status: "inativo",
+  });
+}
 
 async function gerarConvite(profissional) {
 

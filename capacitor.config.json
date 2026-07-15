@@ -1,5 +1,12 @@
 {
   "appId": "com.chaiane.agendainteligente",
-  "appName": "agenda-inteligente",
-  "webDir": "dist"
+  "appName": "agendly",
+  "webDir": "dist",
+  "plugins": {
+    "FirebaseAuthentication": {
+      "providers": [
+        "google.com"
+      ]
+    }
+  }
 }

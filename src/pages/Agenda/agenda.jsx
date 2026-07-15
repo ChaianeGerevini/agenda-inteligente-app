@@ -253,7 +253,7 @@ function temConflito(novo) {
             stickyHeaderDates={true}
             firstDay={0}
             weekends={true}
-            height="auto"
+            height={isMobile ? "80vh" : "auto"}
             eventDisplay="block"
             locale="pt-br"
             headerToolbar={false}
@@ -626,9 +626,8 @@ const styles = {
     padding: 10,
     position: "absolute",
     background: "#F5F7FB",
-    minHeight: "100%",
-    maxHeight: "100%",
-    maxWidth:"100%",
+    width: "90%",
+    minHeight: "90vh",
     fontFamily: "Inter, Arial",
   },
 
@@ -639,6 +638,7 @@ const styles = {
     marginBottom: 10,
     display: "flex",
     alignItems: "center",
+    
     gap: 10,
     boxShadow: "0 4px 14px rgba(0,0,0,0.05)",
   },
@@ -704,6 +704,7 @@ const styles = {
     maxHeight: "70vh",
     background: "#fff",
     borderRadius: 20,
+    overflowY: "auto",
     padding: 25,
   },
 
@@ -725,8 +726,8 @@ const styles = {
   statusButton: {
     flex: 1,
     border: "none",
-    marginBottom: 10,
-    padding: 12,
+    marginBottom: 5,
+    padding: 10,
     borderRadius: 12,
     fontWeight: 600,
   },
@@ -736,7 +737,7 @@ const styles = {
     border: "none",
     display: "flex",
     justifyContent: "center",
-    margin:10,
+    margin:5,
     padding: 10,
     borderRadius: 12,
     cursor: "pointer",
@@ -805,15 +806,20 @@ valorCard: {
   textAlign: "center",
 },
 
+
 editBox: {
   background: "#F8FAFC",
   border: "1px solid #E5E7EB",
   borderRadius: 14,
-  padding: 16,
+  padding: 20,
   marginBottom: 12,
   display: "flex",
   flexDirection: "column",
   gap: 10,
+
+  width: "100%",
+  boxSizing: "border-box",
+
 },
 
 input: {

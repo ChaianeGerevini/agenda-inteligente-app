@@ -4,6 +4,7 @@ import {
   signInWithPopup,
   sendPasswordResetEmail,
   signOut,
+  signInWithCredential,
 } from "firebase/auth";
 
 
@@ -11,6 +12,8 @@ import {
   auth,
   googleProvider,
 } from "./firebase";
+
+import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
 
 export async function loginEmail(email, senha) {
   const userCredential =
@@ -56,7 +59,35 @@ export async function loginGoogle() {
 
 async function loginGoogleAndroid() {
 
-    throw new Error("Login Google Android ainda não implementado.");
+    const result = await FirebaseAuthentication.signInWithGoogle();
+
+    const credential =
+        result.credential;
+
+    if (!credential?.idToken) {
+        throw new Error(
+            "Não foi possível obter o token do Google"
+        );
+    }
+
+
+    const firebaseCredential =
+        await import("firebase/auth")
+        .then(({ GoogleAuthProvider }) =>
+            GoogleAuthProvider.credential(
+                credential.idToken
+            )
+        );
+
+
+    const userCredential =
+        await signInWithCredential(
+            auth,
+            firebaseCredential
+        );
+
+
+    return userCredential.user;
 
 }
 

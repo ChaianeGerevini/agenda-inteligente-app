@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "332377686868",
+    "project_id": "agenda-inteligente-fcdf7",
+    "storage_bucket": "agenda-inteligente-fcdf7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332377686868:android:a97223d821f73256da7ec1",
+        "android_client_info": {
+          "package_name": "com.chaiane.agendainteligente"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "332377686868-0dqvlr83sg2noqpbfkkfetf1u3dsegif.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.chaiane.agendainteligente",
+            "certificate_hash": "94a79fcab304142eac27cd137ca952381e92a7fb"
+          }
+        },
+        {
+          "client_id": "332377686868-7qqbq0jorha3otbo9mnk0nbp9c4p0su8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.chaiane.agendainteligente",
+            "certificate_hash": "6df8badaa8d2aa03e080fd428f51e8209afaca20"
+          }
+        },
+        {
+          "client_id": "332377686868-deqoejgkfv268j2k6mm5qti5qcpoh4nq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxspDv3yIp6N2cuJswpg9k06FrUQwCA-E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "332377686868-deqoejgkfv268j2k6mm5qti5qcpoh4nq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

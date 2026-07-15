@@ -189,7 +189,7 @@ async function entrar() {
   alt="Agendly"
   style={styles.logo}
 />
-        <h1 style={styles.title}>Agenda Inteligente</h1>
+        <h1 style={styles.title}>Agendly - Sua agenda Inteligente</h1>
         <p style={styles.subtitle}>Organize seus clientes e horários</p>
 
         <input

@@ -18,7 +18,7 @@ const navigate = useNavigate();
 
 
 const [etapa,setEtapa] = useState(1);
-
+const [nome, setNome] = useState("");
 const [empresa,setEmpresa] = useState("");
 const [categoria,setCategoria] = useState("");
 const [telefone,setTelefone] = useState("");
@@ -27,15 +27,12 @@ const [loading,setLoading] = useState(false);
 
 
 
-useEffect(()=>{
-
-if(usuario?.nome && !empresa){
-
-setEmpresa(usuario.nome);
-
-}
-
-},[usuario]);
+useEffect(() => {
+  if (usuario) {
+    if (!nome) setNome(usuario.nome || "");
+    if (!empresa) setEmpresa(usuario.nome || "");
+  }
+}, [usuario]);
 
 
 
@@ -86,7 +83,7 @@ usuario.uid
 ),
 
 {
- nome: usuario.nome,
+nome: nome,
 empresaPerfil:empresa,
 
 categoria,
@@ -270,6 +267,7 @@ x:-50
 </h2>
 
 
+
 <div style={styles.grid}>
 
 
@@ -392,6 +390,12 @@ x:-50
 </h2>
 
 
+<input
+  style={styles.input}
+  value={nome}
+  placeholder="Seu nome"
+  onChange={(e) => setNome(e.target.value)}
+/>
 
 <input
 

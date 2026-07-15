@@ -5,6 +5,7 @@ import BottomNav from "../components/BottomNav";
 import ModalNovoAtendimento from "../components/ModalNovoAtendimento";
 import Sidebar from "../components/sidebar";
 import { useUser } from "../contexts/UserContext";
+import { iniciarNotificacoes } from "../services/notificationService";
 import { signOut } from "firebase/auth";
 import logo from "/src/assets/agendly-logo.jpg";
 import {
@@ -27,6 +28,55 @@ import { db } from "../services/firebase";
 
 
 function MainLayout() {
+
+  const { usuario } = useUser();
+
+
+useEffect(() => {
+
+  let ativo = true;
+
+  async function acordarServidor() {
+    try {
+      await fetch(
+        "https://backend-agenda-hgrd.onrender.com/ping"
+      );
+    } catch {}
+  }
+
+  if (ativo) {
+    acordarServidor();
+  }
+
+  const interval = setInterval(() => {
+    if (ativo) {
+      acordarServidor();
+    }
+  }, 10 * 60 * 1000);
+
+
+  return () => {
+    ativo = false;
+    clearInterval(interval);
+  };
+
+}, []);
+
+useEffect(()=>{
+
+ if(usuario?.uid){
+
+    iniciarNotificacoes()
+      .then(token=>{
+
+        salvarToken(token);
+
+      });
+
+ }
+
+},[usuario]);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [notificacoes, setNotificacoes] = useState([]);
@@ -47,7 +97,24 @@ function MainLayout() {
  const [senhaAtual, setSenhaAtual] = useState("");
 const [novaSenha, setNovaSenha] = useState("");
 const [confirmarSenha, setConfirmarSenha] = useState("");
-const { usuario } = useUser();
+
+async function salvarToken(token){
+
+  if(!token || !usuario?.uid) return;
+
+  await setDoc(
+    doc(db,"usuarios",usuario.uid),
+    {
+      pushToken: token,
+      plataforma: "android",
+      atualizadoEm: serverTimestamp()
+    },
+    {
+      merge:true
+    }
+  );
+
+}
 
 const planoAtual = {
   tipo: usuario?.plano || "free",

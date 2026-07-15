@@ -136,6 +136,7 @@ async function criarClienteRapido() {
 async function verificarConflitoRealtime(novo) {
   const q = query(
     collection(db, "agendamentos"),
+    where("empresaId", "==", usuario.empresaId),
     where("data", "==", novo.data),
     where("profissional", "==", novo.profissional)
   );
@@ -157,6 +158,11 @@ async function verificarConflitoRealtime(novo) {
       (inicioB <= inicioA && fimB >= fimA)
     );
   });
+  console.log("Novo agendamento:", novo);
+
+snapshot.docs.forEach((doc) => {
+  console.log(doc.id, doc.data());
+});
 
   return conflitos;
 }
