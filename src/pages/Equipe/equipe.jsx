@@ -261,9 +261,6 @@ ${link}`;
     ...styles.card,
     position: "relative",
     overflow: "hidden",
-    filter: !isPremium() && index >= 1 ? "blur(2px)" : "none",
-    opacity: !isPremium() && index >= 1 ? 0.6 : 1,
-    pointerEvents: !isPremium() && index >= 1 ? "none" : "auto",
   }}
 >
             <div>
@@ -320,24 +317,6 @@ ${link}`;
                 Remover
               </button>
             </div>
-            {!isPremium() && index >= 1 && (
-  <div style={styles.premiumOverlay}>
-    <div style={styles.premiumBox}>
-      <div style={styles.premiumTitle}>🔒 Limite atingido</div>
-
-      <div style={styles.premiumText}>
-        No plano gratuito você pode ter apenas 1 profissional.
-      </div>
-
-      <button
-        style={styles.premiumButton}
-        onClick={() => setModalPlanos(true)}
-      >
-        Fazer upgrade
-      </button>
-    </div>
-  </div>
-)}
           </div>
 
         ))
@@ -436,6 +415,25 @@ ${link}`;
           </div>
         </div>
             )}
+
+            {!isPremium() && (
+
+  <div style={styles.lockedCard}>
+    <div style={styles.fakeContent}>
+      <div style={styles.fakeTitle}></div>
+      <div style={styles.fakeLine}></div>
+      <div style={styles.fakeLine}></div>
+      <div style={styles.fakeLineSmall}></div>
+    </div>
+
+    <button
+      style={styles.upgradeButton}
+      onClick={() => setModalPlanos(true)}
+    >
+      ⭐ Desbloquear Premium
+    </button>
+  </div>
+)}
 
       {modalPlanos && (
         <UpgradeCard onClose={() => setModalPlanos(false)} />
@@ -631,6 +629,66 @@ premiumButton: {
   cursor: "pointer",
   fontWeight: 600,
   width: "100%",
+},
+lockedCard:{
+  position:"relative",
+  marginTop:15,
+  padding:20,
+  borderRadius:18,
+  background:"#fff",
+  overflow:"hidden",
+  boxShadow:"0 8px 30px rgba(0,0,0,.08)"
+},
+
+fakeContent:{
+  filter:"blur(7px)",
+  opacity:.5,
+  pointerEvents:"none"
+},
+
+fakeTitle:{
+  width:180,
+  height:18,
+  borderRadius:8,
+  background:"#dbe4ff",
+  marginBottom:15
+},
+
+fakeLine:{
+  width:"100%",
+  height:14,
+  borderRadius:8,
+  background:"#e5e7eb",
+  marginBottom:12
+},
+
+fakeLineSmall:{
+  width:"45%",
+  height:14,
+  borderRadius:8,
+  background:"#e5e7eb"
+},
+
+upgradeButton:{
+  position:"absolute",
+  left:"50%",
+  top:"50%",
+  transform:"translate(-50%,-50%)",
+
+  border:"none",
+  borderRadius:999,
+
+  padding:"14px 28px",
+
+  background:"linear-gradient(135deg,#4A6FFF,#2563eb)",
+
+  color:"#fff",
+
+  fontWeight:700,
+
+  cursor:"pointer",
+
+  boxShadow:"0 12px 30px rgba(37,99,235,.35)"
 },
 };
 
