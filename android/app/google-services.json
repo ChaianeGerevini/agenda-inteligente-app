@@ -14,14 +14,6 @@
       },
       "oauth_client": [
         {
-          "client_id": "332377686868-0dqvlr83sg2noqpbfkkfetf1u3dsegif.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.chaiane.agendainteligente",
-            "certificate_hash": "94a79fcab304142eac27cd137ca952381e92a7fb"
-          }
-        },
-        {
           "client_id": "332377686868-7qqbq0jorha3otbo9mnk0nbp9c4p0su8.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

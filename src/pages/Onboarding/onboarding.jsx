@@ -84,6 +84,7 @@ usuario.uid
 
 {
 nome: nome,
+nomePerfil: nome, 
 empresaPerfil:empresa,
 
 categoria,
