@@ -471,7 +471,7 @@ const styles = {
 
   modal: {
     background: "#fff",
-    width: "90%",
+    width: "100%",
     maxWidth: 400,
     borderRadius: 24,
     margin: 10,
@@ -485,7 +485,7 @@ const styles = {
   },
 
   input: {
-    width: "90%",
+    width: "100%",
     padding: 14,
     marginBottom: 10,
     border: "1px solid #e5e7eb",
