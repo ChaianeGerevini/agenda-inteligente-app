@@ -78,10 +78,11 @@ useEffect(() => {
 useEffect(() => {
   if (!usuario?.empresaId) return;
 
-  const q = query(
-    collection(db, "equipe"),
-    where("empresaId", "==", usuario.empresaId)
-  );
+ const q = query(
+  collection(db, "equipe"),
+  where("empresaId", "==", usuario.empresaId),
+  where("status", "==", "ativo")
+);
 
   const unsub = onSnapshot(q, (snap) => {
     setEquipe(
@@ -124,7 +125,8 @@ useEffect(() => {
 
 const faturamentoSalao = agendamentosMes.reduce((total, agendamento) => {
   const profissional = equipe.find(
-    (p) => p.nome === agendamento.profissional
+    (p) => p.id === agendamento.profissional ||
+    p.nome === agendamento.profissional
   );
 
   const percentualSalao = Number(profissional?.comissao || 0);
@@ -143,12 +145,13 @@ const faturamentoProfissionais =
   // =========================
 
   const ranking = equipe.map((prof) => {
-    const atendimentos = agendamentosMes.filter(
-      (a) =>
-        a.profissional === prof.nome ||
-        a.profissionalId === prof.id
-    );
+    const atendimentos = agendamentosMes.filter((a) => {
+  if (a.profissionalId) {
+    return a.profissionalId === prof.id;
+  }
 
+  return a.profissional === prof.nome;
+});
     const totalBruto = atendimentos.reduce(
       (t, a) => t + Number(a.valor || 0),
       0

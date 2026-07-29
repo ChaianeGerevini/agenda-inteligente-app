@@ -60,25 +60,6 @@ useEffect(() => {
 }, [usuario]);
 
 useEffect(() => {
-
-  const unsub = onSnapshot(
-    collection(db, "clientes"),
-    (snapshot) => {
-
-      const lista = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      setClientes(lista);
-
-    }
-  );
-
-  return () => unsub();
-
-}, []);
-useEffect(() => {
   if (!usuario?.empresaId) return;
 
   const q = query(
@@ -218,7 +199,8 @@ await addDoc(collection(db, "agendamentos"), {
   data,
   horaInicio,
   horaFim,
-  profissional,
+   profissional: profissionalSelecionado.nome,
+  profissionalId: profissionalSelecionado.id,
 
   empresaId: usuario.empresaId,
   gestorId: usuario.uid,
