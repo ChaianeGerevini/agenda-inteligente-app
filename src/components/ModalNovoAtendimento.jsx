@@ -471,7 +471,7 @@ const styles = {
 
   modal: {
     background: "#fff",
-    width: "100%",
+    width: "90%",
     maxWidth: 400,
     borderRadius: 24,
     margin: 10,
@@ -485,7 +485,7 @@ const styles = {
   },
 
   input: {
-    width: "100%",
+    width: "90%",
     padding: 14,
     marginBottom: 10,
     border: "1px solid #e5e7eb",
@@ -545,7 +545,7 @@ sugestaoHover: {
   background: "#F5F7FB",
 },
 select: {
-  width: "100%",
+  width: "90%",
   padding: 14,
   marginBottom: 10,
   border: "1px solid #e5e7eb",
