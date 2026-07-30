@@ -62,20 +62,11 @@ useEffect(() => {
 
 }, []);
 
-useEffect(()=>{
+useEffect(() => {
+  if (!usuario?.uid) return;
 
- if(usuario?.uid){
-
-    iniciarNotificacoes()
-      .then(token=>{
-
-        salvarToken(token);
-
-      });
-
- }
-
-},[usuario]);
+  iniciarNotificacoes(usuario);
+}, [usuario]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

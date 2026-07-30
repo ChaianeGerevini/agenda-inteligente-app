@@ -25,7 +25,6 @@ const { usuario } = useUser();
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [observacao, setObservacao] = useState("");
-  const [promo, setPromo] = useState("");
   const [clienteSelecionado, setClienteSelecionado] = useState("");
 
 useEffect(() => {
@@ -47,6 +46,19 @@ useEffect(() => {
 
   return () => unsub();
 }, [usuario]);
+
+const mensagemPadrao = `Oi, {nome}! Tudo bem? 😊
+
+Passei para te avisar que estou com uma promoção especial e lembrei de você!
+
+✨ Digite sua promoção aqui
+
+Se quiser aproveitar, é só me chamar por aqui que será um prazer agendar um horário para você.
+
+Espero te ver em breve! 💙`;
+
+const [promo, setPromo] = useState(mensagemPadrao);
+
 
   // ➕ NOVO CLIENTE
 async function salvarCliente() {
@@ -110,16 +122,14 @@ async function excluirCliente(id) {
 }
 
   // 📲 PROMO WHATS
-  function enviarPromocao(cliente) {
-    const texto = encodeURIComponent(
-      `Olá ${cliente.nome}! ${promo}`
-    );
+function enviarPromocao(cliente) {
+  const mensagem = promo.replace("{nome}", cliente.nome);
 
-    window.open(
-      `https://wa.me/55${cliente.telefone}?text=${texto}`,
-      "_blank"
-    );
-  }
+  window.open(
+    `https://wa.me/55${cliente.telefone}?text=${encodeURIComponent(mensagem)}`,
+    "_blank"
+  );
+}
 
   return (
     <div className="clientes-page">
@@ -275,20 +285,31 @@ async function excluirCliente(id) {
               ✕
             </button>
 
-            <h3>Nova Promoção</h3>
+            <h3>Enviar Promoção</h3>
 
             <textarea
-              placeholder="Digite a promoção..."
-              value={promo}
+                rows={10}
+                value={promo}
               onChange={(e) => setPromo(e.target.value)}
             />
 
            <select
   className="cliente-select"
   value={clienteSelecionado}
-  onChange={(e) =>
-    setClienteSelecionado(e.target.value)
+  onChange={(e) => {
+  const id = e.target.value;
+  setClienteSelecionado(id);
+
+  const cliente = clientes.find(c => c.id === id);
+
+  if (cliente) {
+    setPromo(
+      mensagemPadrao.replace("{nome}", cliente.nome)
+    );
+  } else {
+    setPromo(mensagemPadrao);
   }
+}}
 >
   <option value="">
     Selecione um cliente

@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:332377686868:web:bb720d9593e74300da7ec1",
 };
 
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence)

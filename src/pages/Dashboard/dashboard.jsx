@@ -124,10 +124,13 @@ useEffect(() => {
   );
 
 const faturamentoSalao = agendamentosMes.reduce((total, agendamento) => {
-  const profissional = equipe.find(
-    (p) => p.id === agendamento.profissional ||
-    p.nome === agendamento.profissional
-  );
+  const profissional = equipe.find((p) => {
+  if (agendamento.profissionalId) {
+    return p.id === agendamento.profissionalId;
+  }
+
+  return p.nome === agendamento.profissional;
+});
 
   const percentualSalao = Number(profissional?.comissao || 0);
 

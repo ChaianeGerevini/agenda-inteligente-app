@@ -205,7 +205,8 @@
   border-radius: 12px;
   padding: 14px;
   margin-bottom: 12px;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
   outline: none;
   transition: 0.2s;
   box-sizing: border-box;

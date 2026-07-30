@@ -1,26 +1,36 @@
 import { FirebaseMessaging } from "@capacitor-firebase/messaging";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { app } from "./firebase";
 
+export async function iniciarNotificacoes(usuario) {
+  const permission = await FirebaseMessaging.requestPermissions();
 
-export async function iniciarNotificacoes(){
+  if (permission.receive !== "granted") {
+    return;
+  }
 
-    const permission =
-        await FirebaseMessaging.requestPermissions();
+  const { token } = await FirebaseMessaging.getToken();
 
+  await updateDoc(doc(db, "usuarios", usuario.uid), {
+    pushToken: token,
+  });
 
-    if(permission.receive !== "granted"){
-        return;
-    }
+  console.log("TOKEN PUSH:", token);
 
+  return token;
+}
 
-    const token =
-        await FirebaseMessaging.getToken();
+const functions = getFunctions(app);
 
+export async function enviarPushTeste(token) {
+  const enviarTeste = httpsCallable(
+    functions,
+    "enviarTeste"
+  );
 
-    console.log(
-        "TOKEN PUSH:",
-        token.token
-    );
+  const resultado = await enviarTeste({
+    token,
+  });
 
-
-    return token.token;
+  console.log(resultado.data);
 }
