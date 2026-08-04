@@ -253,7 +253,7 @@ handleWindowResize={true} ///////////////////////
             locale="pt-br"
             headerToolbar={false}
             events={events}
-            dayMaxEventRows={3}
+            dayMaxEventRows={6}
             viewDidMount={(info) => {
               setView(info.view.type);
               setTituloCalendario(info.view.title);
@@ -626,8 +626,9 @@ container: {
   display: "flex",
   flexDirection: "column",
   width: "100%",
+    maxWidth: "100%",
   height: "100dvh",
-  padding: 16,
+  padding: 12,
   background: "#F5F7FB",
   boxSizing: "border-box",
 
@@ -635,7 +636,7 @@ container: {
 
   header: {
     background: "#fff",
-    padding: 10,
+    padding: 8,
     borderRadius: 16,
     marginBottom: 10,
     display: "flex",
