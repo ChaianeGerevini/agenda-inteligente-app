@@ -63,24 +63,17 @@ useEffect(() => {
 
   // 🔥 EVENTS
 const events = useMemo(() => {
-  return agendamentos.map((a) => {
-    const cor = a.corProfissional || "#4A6FFF";
+  return agendamentos.map((a) => ({
+    id: a.id,
+    title: `${a.titulo} - ${a.cliente}`,
+    start: `${a.data}T${a.horaInicio}`,
+    end: a.horaFim ? `${a.data}T${a.horaFim}` : undefined,
 
-    return {
-      id: a.id,
-      title: `${a.titulo} - ${a.cliente}`,
-      start: `${a.data}T${a.horaInicio}`,
-      end: a.horaFim ? `${a.data}T${a.horaFim}` : undefined,
-
-      backgroundColor: cor,
-      borderColor: cor,
-
-      extendedProps: {
-        ...a,
-        corProfissional: cor,
-      },
-    };
-  });
+    extendedProps: {
+      ...a,
+      corProfissional: a.corProfissional || "#4A6FFF",
+    },
+  }));
 }, [agendamentos]);
 
   // 🔥 NAV
@@ -253,8 +246,10 @@ function temConflito(novo) {
             stickyHeaderDates={true}
             firstDay={0}
             weekends={true}
-            height={isMobile ? "80vh" : "auto"}
-            eventDisplay="block"
+            height="100%"
+contentHeight="100%"
+handleWindowResize={true} ///////////////////////
+            eventDisplay="auto"
             locale="pt-br"
             headerToolbar={false}
             events={events}
@@ -309,9 +304,8 @@ function temConflito(novo) {
 
 }}
 eventContent={(arg) => {
-  const cor =
+    const cor =
     arg.event.extendedProps?.corProfissional ||
-    arg.event.backgroundColor ||
     "#4A6FFF";
 
   return (
@@ -321,12 +315,18 @@ eventContent={(arg) => {
           width: 8,
           height: 8,
           borderRadius: "50%",
-          backgroundColor: cor,
-          flexShrink: 1,
+          background: cor,
+          flexShrink: 0,
         }}
       />
 
-      <span style={styles.eventText}>
+      <span
+        style={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
         {arg.event.title}
       </span>
     </div>
@@ -622,14 +622,16 @@ eventContent={(arg) => {
 }
 
 const styles = {
-  container: {
-    padding: 10,
-    position: "absolute",
-    background: "#F5F7FB",
-    width: "90%",
-    minHeight: "90vh",
-    fontFamily: "Inter, Arial",
-  },
+container: {
+  display: "flex",
+  flexDirection: "column",
+  width: "100%",
+  height: "100dvh",
+  padding: 16,
+  background: "#F5F7FB",
+  boxSizing: "border-box",
+
+},
 
   header: {
     background: "#fff",
@@ -638,7 +640,7 @@ const styles = {
     marginBottom: 10,
     display: "flex",
     alignItems: "center",
-    
+      flexWrap: "wrap",
     gap: 10,
     boxShadow: "0 4px 14px rgba(0,0,0,0.05)",
   },
@@ -673,7 +675,15 @@ const styles = {
     fontSize: 12,
   },
 
-  calendar: { background: "#fff", borderRadius: 16, padding: 2 },
+calendar: {
+  flex: 1,
+  background: "#fff",
+  borderRadius: 16,
+  padding: 8,
+  overflow: "hidden",
+  minHeight: 0,
+},
+
   monthTitle: {
     flex: 1,
     textAlign: "center",
@@ -858,6 +868,7 @@ cancelBtn: {
   fontWeight: 600,
   cursor: "pointer",
 },
+
 };
 
 export default Agenda;

@@ -9,9 +9,11 @@ function UpgradeCard({
   variant = "card",
   showPrice = true,
 }) {
+  
 
 
 const { usuario } = useUser();
+const premium = usuario?.plano === "premium";
 
 const [checkoutUrl,setCheckoutUrl]=useState(null);
 const [loading,setLoading]=useState(false);
@@ -78,21 +80,17 @@ console.log(
 
 
 
-if(usuario?.email){
-
-prepararCheckout();
-
+if (usuario?.email && !premium) {
+    prepararCheckout();
 }
 
 
-},[usuario]);
-
+}, [usuario, premium]);
 
 
 
 
 async function iniciarCheckout(){
-
 
 try{
 
@@ -104,8 +102,6 @@ window.location.href=checkoutUrl;
 return;
 
 }
-
-
 
 const res=await fetch(
 
@@ -159,7 +155,30 @@ alert(
 
 }
 
+async function abrirPortalStripe() {
+  try {
+    const res = await fetch(
+      "https://backend-agenda-hgrd.onrender.com/customer-portal",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: usuario.uid,
+        }),
+      }
+    );
 
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  } catch (err) {
+    alert("Erro ao abrir gerenciamento da assinatura.");
+  }
+}
 
 
 return (
@@ -196,45 +215,43 @@ style={{
 
 
 <div style={styles.badge}>
-Plano Premium
+  {premium ? "Assinatura" : "Plano Premium"}
 </div>
 
-
-
 <h2>
-
-{titulo}
-
+  {premium ? "Sua assinatura está ativa" : titulo}
 </h2>
 
-
 <p style={styles.descricao}>
-
-{descricao}
-
+  {premium
+    ? "Gerencie sua assinatura e seus benefícios."
+    : descricao}
 </p>
 
 
 
 
-<div style={styles.lista}>
-
-<div>✓ Profissionais ilimitados</div>
-
-<div>✓ Ranking da equipe</div>
-
-<div>✓ Relatórios avançados</div>
-
-<div>✓ Sem anúncios</div>
-
-</div>
+{premium ? (
+  <div style={styles.lista}>
+    <div>🟢 Status: Ativa</div>
+    <div>⭐ Plano: Premium</div>
+    <div>✓ Profissionais ilimitados</div>
+    <div>✓ Relatórios avançados</div>
+  </div>
+) : (
+  <div style={styles.lista}>
+    <div>✓ Profissionais ilimitados</div>
+    <div>✓ Ranking da equipe</div>
+    <div>✓ Relatórios avançados</div>
+    <div>✓ Sem anúncios</div>
+  </div>
+)}
 
 
 
 
 {
-showPrice &&
-
+showPrice && !premium &&
 <div style={styles.preco}>
 
 R$ 19,90
@@ -247,54 +264,32 @@ R$ 19,90
 
 }
 
-<button
+{premium ? (
+  <button
+    style={styles.botao}
+    onClick={abrirPortalStripe}
+  >
+    Gerenciar assinatura
+  </button>
+) : (
+  <button
+    disabled={loading}
+    style={styles.botao}
+    onClick={async () => {
+      setLoading(true);
 
-
-disabled={loading}
-
-
-style={styles.botao}
-
-
-onClick={async()=>{
-
-
-setLoading(true);
-
-
-try{
-
-await iniciarCheckout();
-
-
-}finally{
-
-setLoading(false);
-
-}
-
-
-}}
-
-
->
-
-
-{
-loading
-
-?
-
-"Abrindo checkout..."
-
-:
-
-"Assinar Premium 🚀"
-
-}
-
-
-</button>
+      try {
+        await iniciarCheckout();
+      } finally {
+        setLoading(false);
+      }
+    }}
+  >
+    {loading
+      ? "Abrindo checkout..."
+      : "Assinar Premium 🚀"}
+  </button>
+)}
 
 
 
@@ -311,29 +306,30 @@ const styles={
 
 
 container:{
-position:"relative",
-overflow:"hidden",
-background:"#ffffff",
-borderRadius:24,
-padding:28,
-boxShadow:
-"0 20px 50px rgba(0,0,0,.12)",
-textAlign:"center",
-border:
-"1px solid #e5e7eb"
+  position:"relative",
+  width:"100%",
+  boxSizing:"border-box",
+  background:"#ffffff",
+  borderRadius:24,
+  padding:20,
+  boxShadow:"0 20px 50px rgba(0,0,0,.12)",
+  textAlign:"center",
+  border:"1px solid #e5e7eb",
+  overflow:"hidden"
 },
 
 card:{
-maxWidth:380,
-margin:"auto"
+  width:"100%",
+  maxWidth:"100%",
+  margin:"auto",
+  boxSizing:"border-box"
 },
 
 modal:{
-width:"100%",
-maxWidth:380
-
+  width:"100%",
+  maxWidth:"100%",
+  boxSizing:"border-box"
 },
-
 
 
 banner:{
@@ -342,19 +338,16 @@ alignItems:"center",
 gap:20
 
 },
-
-
-
 glow:{
-position:"absolute",
-width:150,
-height:150,
-background:"#4A6FFF",
-filter:"blur(70px)",
-opacity:.15,
-top:-50,
-right:-50
-
+  position:"absolute",
+  width:150,
+  height:150,
+  background:"#4A6FFF",
+  filter:"blur(70px)",
+  opacity:.15,
+  top:-50,
+  right:-50,
+  pointerEvents:"none"
 },
 
 badge:{

@@ -5,63 +5,81 @@ function PremiumOverlay({
   descricao = " ",
   onUpgrade,
 }) {
+
+  console.log("PREMIUM OVERLAY CARREGOU");
   return (
     <div style={styles.overlay}>
       <div style={styles.content}>
-        <h3>{titulo || "Premium"}</h3>
 
-        <p>{descricao || "Faça upgrade para desbloquear esse recurso."}</p>
+<div style={styles.card}>
+  <h3 style={styles.title}>{titulo}</h3>
 
-        <button
-          style={styles.button}
-          onClick={onUpgrade}
-        >
-         Fazer upgrade 
-        </button>
-      </div>
+  <p style={styles.description}>
+    {descricao}
+  </p>
+
+  <button
+    style={styles.button}
+    onClick={onUpgrade}
+  >
+    Fazer upgrade
+  </button>
+</div>
+
+</div>
     </div>
   );
 }
 
 const styles = {
-overlay: {
-  position: "absolute",
-  inset: 0,
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  backdropFilter: "blur(-90px)",
+ overlay: {
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+      backdropFilter: "blur(-90px)",
   background: "rgba(190, 180, 180, 0.09)",
-  borderRadius: 20,
-},
+    borderRadius: 20,
+  },
 
-content: {
-  textAlign: "center",
-  padding: 10,
-  fontSize: 12,
-},
-
-  card: {
-    background: "rgba(255,255,255,.75)",
-    backdropFilter: "blur(-50px)",
+  content: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
     padding: 15,
-    borderRadius: 18,
+  },
+
+   card: {
+    width: "90%",
+    maxWidth: 320,
     textAlign: "center",
-    width: 50,
-    boxShadow: "0 15px 35px rgba(0,0,0,.15)",
   },
 
   button: {
-    marginTop: 0,
     width: "100%",
-    padding: 12,
-    borderRadius: 12,
+    padding: 10,
     border: "none",
+    borderRadius: 16,
     background: "#4A6FFF",
     color: "#fff",
+    fontWeight: 600,
+    fontSize: 14,
     cursor: "pointer",
-    fontWeight: 400,
   },
+  title: {
+    margin: 0,
+    fontSize: 18,
+    fontWeight: 700,
+  },
+
+  description: {
+    marginTop: 12,
+    marginBottom: 22,
+    fontSize: 12,
+    color: "#111",
+  },
+
 };
 
 export default PremiumOverlay;

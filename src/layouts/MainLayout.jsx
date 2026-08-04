@@ -7,6 +7,7 @@ import Sidebar from "../components/sidebar";
 import { useUser } from "../contexts/UserContext";
 import { iniciarNotificacoes } from "../services/notificationService";
 import { signOut } from "firebase/auth";
+import UpgradeCard from "../components/UpgradeCard";
 import logo from "/src/assets/agendly-logo.jpg";
 import {
   EmailAuthProvider,
@@ -115,6 +116,7 @@ const planoAtual = {
       : "Plano Gratuito",
   diasRestantes: 0,
 };
+const premiumAtivo = planoAtual.tipo === "premium";
 
 const fazerLogout = async () => {
 
@@ -172,6 +174,12 @@ const iniciarCheckout = async (plano) => {
   }
 };
 const enviarSuporte = async () => {
+
+  if (!contatoSuporte || !mensagemSuporte) {
+    alert("Preencha o contato e a mensagem.");
+    return;
+  }
+
   try {
 
     await addDoc(
@@ -182,33 +190,23 @@ const enviarSuporte = async () => {
         empresa: empresaPerfil,
         emailConta: usuario.email,
         contatoRetorno: contatoSuporte,
-
         mensagem: mensagemSuporte,
-
         status: "pendente",
-
         dataCriacao: serverTimestamp(),
       }
     );
 
-    alert(
-      "Solicitação enviada com sucesso!"
-    );
+    alert("Solicitação enviada com sucesso!");
 
     setMensagemSuporte("");
     setContatoSuporte("");
     setModalSuporte(false);
 
-  } catch (error) {
-    console.error(error);
+  } catch(error) {
 
-    alert(
-      "Erro ao enviar solicitação."
-    );
-    if (!contatoSuporte || !mensagemSuporte) {
-  alert("Preencha o contato e a mensagem.");
-  return;
-}
+    console.error(error);
+    alert("Erro ao enviar solicitação.");
+
   }
 };
 const alterarSenha = async () => {
@@ -406,14 +404,14 @@ if (hora < 12) {
 
             <div style={{ ...styles.planCard, border: "2px solid #4A6FFF" }}>
               <h3>Premium</h3>
-             <ul>
-  <li>✔ Tudo do plano Free</li>
-  <li>✔ Profissionais ilimitados</li>
-  <li>✔ Faturamento da equipe</li>
-  <li>✔ Faturamento do negócio</li>
-  <li>✔ Ranking da equipe</li>
-  <li>✔ Remover anúncios</li>
-              </ul>
+<div>
+  
+  <UpgradeCard
+    variant="modal"
+    titulo="Desbloqueie o Premium"
+    descricao="Tenha profissionais ilimitados e recursos avançados"
+  />
+</div>
             {planoAtual.tipo === "premium" ? (
   <button
     style={{

@@ -6,7 +6,7 @@ import {
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
-
+import { criarGestorNaEquipe } from "./equipeService";
 import { db } from "./firebase";
 
 import {
@@ -251,7 +251,9 @@ referredBy:
         }
     );
 
-
+if (empresa.role === "gestor") {
+  await criarGestorNaEquipe(user, empresa);
+}
 
     // 4 - Registra indicação
 
