@@ -158,7 +158,7 @@ alert(
 async function abrirPortalStripe() {
   try {
     const res = await fetch(
-      "https://backend-agenda-hgrd.onrender.com/customer-portal",
+  "https://backend-agenda-hgrd.onrender.com/checkout/customer-portal",
       {
         method: "POST",
         headers: {
