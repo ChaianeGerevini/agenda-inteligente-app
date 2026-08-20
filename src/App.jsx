@@ -17,6 +17,7 @@ import Landing from "./pages/Landing";
 import PrivateRoute from "./routes/PrivateRoute";
 import LoadingScreen from "./components/LoadingScreen";
 import Onboarding from "./pages/Onboarding/onboarding";
+import PaginaAgendamento from "./pages/PaginaAgendamento/PaginaAgendamento";
 
 
 import MainLayout from "./layouts/MainLayout";
@@ -56,7 +57,10 @@ element={
           <Route path="/agenda-dia" element={<AgendaDia />} />
           <Route path="/equipe" element={<Equipe />} />
           <Route path="/sidebar" element={<Sidebar />} />
-          
+          <Route
+  path="/pagina-agendamento"
+  element={<PaginaAgendamento />}
+/>
           <Route path="/indique" element={<Indique />} />
           <Route
   path="/convite/:codigo"
