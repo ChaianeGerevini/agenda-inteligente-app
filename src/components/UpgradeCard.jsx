@@ -157,26 +157,57 @@ alert(
 
 async function abrirPortalStripe() {
   try {
+    console.log("Abrindo portal...");
+    console.log("User ID:", usuario?.uid);
+
     const res = await fetch(
-  "https://backend-agenda-hgrd.onrender.com/checkout/customer-portal",
+      "https://backend-agenda-hgrd.onrender.com/checkout/customer-portal",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: usuario.uid,
+          userId: usuario?.uid,
         }),
       }
     );
 
-    const data = await res.json();
+    console.log("Status HTTP:", res.status);
 
-    if (data.url) {
-      window.location.href = data.url;
+    const texto = await res.text();
+
+console.log("Status HTTP:", res.status);
+console.log("Resposta bruta:", texto);
+
+let data;
+
+try {
+  data = JSON.parse(texto);
+} catch {
+  throw new Error(
+    `Servidor retornou algo que não é JSON: ${texto.substring(0, 200)}`
+  );
+}
+
+    console.log("Resposta do backend:", data);
+
+    if (!res.ok) {
+      throw new Error(data.error || `Erro HTTP ${res.status}`);
     }
+
+    if (!data.url) {
+      throw new Error("Stripe não retornou uma URL.");
+    }
+
+    window.location.href = data.url;
+
   } catch (err) {
-    alert("Erro ao abrir gerenciamento da assinatura.");
+    console.error("ERRO PORTAL STRIPE:", err);
+
+    alert(
+      `Erro ao abrir gerenciamento da assinatura: ${err.message}`
+    );
   }
 }
 

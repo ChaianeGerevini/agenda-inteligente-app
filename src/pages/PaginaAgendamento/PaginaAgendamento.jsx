@@ -1,19 +1,66 @@
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/UserContext";
+import { useState } from "react";
 
 function PaginaAgendamento() {
   const navigate = useNavigate();
   const { usuario } = useUser();
 
   const isPremium = usuario?.plano === "premium";
+  const [loading, setLoading] = useState(false);
 
-  const comprarAutonomo = () => {
-    console.log("Comprar página Autônomo");
-  };
+const iniciarCompra = async (tipo) => {
+  if (!usuario?.uid || !usuario?.email) {
+    alert("Não foi possível identificar seu usuário.");
+    return;
+  }
 
-  const comprarEquipe = () => {
-    console.log("Comprar página Equipe");
-  };
+  try {
+    setLoading(true);
+
+    const res = await fetch(
+      "https://backend-agenda-hgrd.onrender.com/checkout",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plano: tipo,
+          userId: usuario.uid,
+          email: usuario.email,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Erro ao criar checkout.");
+    }
+
+    if (data.url) {
+      window.location.href = data.url;
+      return;
+    }
+
+    throw new Error("Stripe não retornou uma URL de checkout.");
+
+  } catch (error) {
+    console.error("Erro ao iniciar compra:", error);
+    alert(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const comprarAutonomo = () => {
+  iniciarCompra("paginaAutonomo");
+};
+
+const comprarEquipe = () => {
+  iniciarCompra("paginaEquipe");
+};
 
   return (
     <div style={styles.page}>
@@ -106,11 +153,11 @@ function PaginaAgendamento() {
           </div>
 
         <button
-
-  style={isPremium ? styles.teamButton : styles.lockedButton}
-  onClick={isPremium ? comprarEquipe : () => navigate("/faturamento")}
+  style={styles.primaryButton}
+  onClick={comprarAutonomo}
+  disabled={loading}
 >
-  {isPremium ? "Comprar página" : "🔒 Disponível no Premium"}
+  {loading ? "Abrindo checkout..." : "Comprar página"}
 </button>
 
         </div>
