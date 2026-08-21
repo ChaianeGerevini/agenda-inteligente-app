@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/UserContext";
 import { useState } from "react";
+import PersonalizarPagina from "./PersonalizarPagina";
 
 function PaginaAgendamento() {
   const navigate = useNavigate();
@@ -8,6 +9,9 @@ function PaginaAgendamento() {
 
   const isPremium = usuario?.plano === "premium";
   const [loading, setLoading] = useState(false);
+  if (usuario?.paginaAgendamento) {
+  return <PersonalizarPagina />;
+}
 
 const iniciarCompra = async (tipo) => {
   if (!usuario?.uid || !usuario?.email) {
