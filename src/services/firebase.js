@@ -1,6 +1,12 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, setPersistence,
-  browserLocalPersistence } from "firebase/auth";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  setPersistence,
+  browserLocalPersistence,
+} from "firebase/auth";
+
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -15,19 +21,21 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+
 setPersistence(auth, browserLocalPersistence)
- .then(() => {
+  .then(() => {
     console.log("Persistência ativada");
   })
   .catch((error) => {
-    console.error("Erro ao configurar persistência:", error);
+    console.error(
+      "Erro ao configurar persistência:",
+      error
+    );
   });
 
 export const db = getFirestore(app);
 
-export const googleProvider = new GoogleAuthProvider();
+export const googleProvider =
+  new GoogleAuthProvider();
 
 export default app;
-
-
-

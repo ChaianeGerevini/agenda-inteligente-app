@@ -18,6 +18,9 @@ import PrivateRoute from "./routes/PrivateRoute";
 import LoadingScreen from "./components/LoadingScreen";
 import Onboarding from "./pages/Onboarding/onboarding";
 import PaginaAgendamento from "./pages/PaginaAgendamento/PaginaAgendamento";
+import PaginaPublica from "./pages/PaginaAgendamento/PaginaPublica";
+import PersonalizarPagina from "./pages/PaginaAgendamento/PersonalizarPagina.jsx";
+
 
 
 import MainLayout from "./layouts/MainLayout";
@@ -43,6 +46,10 @@ if(loadingUser){
  path="/onboarding"
  element={<Onboarding />}
 />
+  <Route
+    path="/agendar/:uid"
+    element={<PaginaPublica />}
+  />
         <Route 
 element={
   <PrivateRoute>
@@ -60,6 +67,10 @@ element={
           <Route
   path="/pagina-agendamento"
   element={<PaginaAgendamento />}
+/>
+<Route
+  path="/personalizar-pagina"
+  element={<PersonalizarPagina />}
 />
           <Route path="/indique" element={<Indique />} />
           <Route

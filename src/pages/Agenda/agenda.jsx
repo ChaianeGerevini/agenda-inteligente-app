@@ -63,17 +63,114 @@ useEffect(() => {
 
   // 🔥 EVENTS
 const events = useMemo(() => {
-  return agendamentos.map((a) => ({
-    id: a.id,
-    title: `${a.titulo} - ${a.cliente}`,
-    start: `${a.data}T${a.horaInicio}`,
-    end: a.horaFim ? `${a.data}T${a.horaFim}` : undefined,
+  return agendamentos.map((a) => {
 
-    extendedProps: {
-      ...a,
-      corProfissional: a.corProfissional || "#4A6FFF",
-    },
-  }));
+    // ==========================================
+    // CLIENTE
+    // ==========================================
+
+    const nomeCliente =
+      a.cliente ||
+      a.clienteNome ||
+      "Cliente";
+
+    // ==========================================
+    // SERVIÇO
+    // ==========================================
+
+    const nomeServico =
+      a.titulo ||
+      a.servicoNome ||
+      a.servico?.nome ||
+      "Serviço";
+
+    // ==========================================
+    // HORÁRIO INICIAL
+    // ==========================================
+
+    const horaInicio =
+      a.horaInicio ||
+      a.horario;
+
+    // ==========================================
+    // HORÁRIO FINAL
+    // ==========================================
+
+    let horaFim = a.horaFim;
+
+    // Se for agendamento da página pública
+    // calculamos o horário final pela duração.
+
+    if (!horaFim && horaInicio) {
+
+      const [hora, minuto] =
+        horaInicio.split(":").map(Number);
+
+      const duracao =
+        Number(
+          a.duracao ||
+          a.servico?.duracao ||
+          30
+        );
+
+      const totalMinutos =
+        hora * 60 +
+        minuto +
+        duracao;
+
+      const horaFinal =
+        Math.floor(totalMinutos / 60);
+
+      const minutoFinal =
+        totalMinutos % 60;
+
+      horaFim =
+        `${String(horaFinal).padStart(2, "0")}:${String(minutoFinal).padStart(2, "0")}`;
+    }
+
+    return {
+      id: a.id,
+
+      title:
+        `${nomeServico} - ${nomeCliente}`,
+
+      start:
+        a.data && horaInicio
+          ? `${a.data}T${horaInicio}`
+          : undefined,
+
+      end:
+        a.data && horaFim
+          ? `${a.data}T${horaFim}`
+          : undefined,
+
+      extendedProps: {
+        ...a,
+
+        cliente:
+          nomeCliente,
+
+        telefone:
+          a.telefone ||
+          a.clienteTelefone ||
+          "",
+
+        titulo:
+          nomeServico,
+
+        horaInicio:
+          horaInicio,
+
+        horaFim:
+          horaFim,
+
+        corProfissional:
+          a.corProfissional ||
+          "#4A6FFF",
+      },
+    };
+  });
+
 }, [agendamentos]);
 
   // 🔥 NAV
@@ -507,8 +604,20 @@ eventContent={(arg) => {
 
 <div style={styles.infoCard}>
   <span><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Cliente</span>
+<strong>
+    {eventoSelecionado.cliente ||
+      eventoSelecionado.clienteNome ||
+      "Cliente"}
+  </strong>
+</div>
+
+<div style={styles.infoCard}>
+  <span>📱 Telefone</span>
+
   <strong>
-    {eventoSelecionado.cliente}
+    {eventoSelecionado.telefone ||
+      eventoSelecionado.clienteTelefone ||
+      "Não informado"}
   </strong>
 </div>
 
