@@ -16,6 +16,7 @@ import {
 
 function PaginaPublica() {
   const { uid } = useParams();
+  console.log("UID DA URL:", uid);
 
   // ============================================================
   // DADOS DO PROFISSIONAL / DONO DA PÁGINA
@@ -76,39 +77,59 @@ function PaginaPublica() {
   // CARREGAR PÁGINA
   // ============================================================
 
-  useEffect(() => {
-    const carregarPagina = async () => {
-      if (!uid) {
-        setCarregando(false);
+useEffect(() => {
+  const carregarPagina = async () => {
+    if (!uid) {
+      setPagina(null);
+      setCarregando(false);
+      return;
+    }
+
+    try {
+      console.log("UID da URL:", uid);
+console.log("UID recebido:", uid);
+      const usuarioRef = doc(db, "usuarios", uid);
+      const usuarioSnap = await getDoc(usuarioRef);
+
+console.log(
+  "Documento existe?",
+  usuarioSnap.exists()
+);
+      if (!usuarioSnap.exists()) {
+        console.error(
+          "Usuário não encontrado no Firestore:",
+          uid
+        );
+
+        setPagina(null);
         return;
       }
 
-      try {
-        const usuarioRef = doc(db, "usuarios", uid);
+      const dados = usuarioSnap.data();
 
-        const usuarioSnap = await getDoc(usuarioRef);
+      console.log("Usuário encontrado:", dados);
+      console.log(
+        "Página de agendamento:",
+        dados.paginaAgendamento
+      );
 
-        if (!usuarioSnap.exists()) {
-          setPagina(null);
-          return;
-        }
+      setDadosProfissional(dados);
+      setPagina(dados.paginaAgendamento || null);
 
-        const dados = usuarioSnap.data();
+    } catch (error) {
+      console.error(
+        "Erro ao carregar página:",
+        error
+      );
 
-        setDadosProfissional(dados);
+      setPagina(null);
+    } finally {
+      setCarregando(false);
+    }
+  };
 
-        setPagina(dados.paginaAgendamento || null);
-      } catch (error) {
-        console.error("Erro ao carregar página:", error);
-
-        setPagina(null);
-      } finally {
-        setCarregando(false);
-      }
-    };
-
-    carregarPagina();
-  }, [uid]);
+  carregarPagina();
+}, [uid]);
 
   // ============================================================
   // CARREGAR EQUIPE
