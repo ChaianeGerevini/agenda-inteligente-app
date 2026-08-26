@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
 import { db } from "../../services/firebase.js";
 
 import {
@@ -16,7 +15,6 @@ import {
 
 function PaginaPublica() {
   const { uid } = useParams();
-  console.log("UID DA URL:", uid);
 
   // ============================================================
   // DADOS DO PROFISSIONAL / DONO DA PÁGINA
@@ -29,10 +27,8 @@ function PaginaPublica() {
   // ============================================================
 
   const [membrosEquipe, setMembrosEquipe] = useState([]);
-
   const [profissionalSelecionado, setProfissionalSelecionado] =
     useState(null);
-
   const [carregandoEquipe, setCarregandoEquipe] = useState(false);
 
   // ============================================================
@@ -47,8 +43,13 @@ function PaginaPublica() {
   // ============================================================
 
   const [pagina, setPagina] = useState(null);
-
   const [carregando, setCarregando] = useState(true);
+
+  const [paginaNaoEncontrada, setPaginaNaoEncontrada] =
+    useState(false);
+
+  const [erroCarregamento, setErroCarregamento] =
+    useState(false);
 
   const [carregandoHorarios, setCarregandoHorarios] =
     useState(false);
@@ -57,9 +58,7 @@ function PaginaPublica() {
     useState(false);
 
   const [mensagemErro, setMensagemErro] = useState("");
-
-  const [mensagemSucesso, setMensagemSucesso] =
-    useState("");
+  const [mensagemSucesso, setMensagemSucesso] = useState("");
 
   const [servicoSelecionado, setServicoSelecionado] =
     useState(null);
@@ -77,59 +76,147 @@ function PaginaPublica() {
   // CARREGAR PÁGINA
   // ============================================================
 
-useEffect(() => {
-  const carregarPagina = async () => {
-    if (!uid) {
-      setPagina(null);
-      setCarregando(false);
-      return;
-    }
+  useEffect(() => {
+    let ativo = true;
 
-    try {
-      console.log("UID da URL:", uid);
-console.log("UID recebido:", uid);
-      const usuarioRef = doc(db, "usuarios", uid);
-      const usuarioSnap = await getDoc(usuarioRef);
+    const carregarPagina = async () => {
+      setCarregando(true);
+      setPaginaNaoEncontrada(false);
+      setErroCarregamento(false);
 
-console.log(
-  "Documento existe?",
-  usuarioSnap.exists()
-);
-      if (!usuarioSnap.exists()) {
-        console.error(
-          "Usuário não encontrado no Firestore:",
-          uid
-        );
+      if (!uid) {
+        console.error("Nenhum UID foi encontrado na URL.");
 
-        setPagina(null);
+        if (ativo) {
+          setPagina(null);
+          setPaginaNaoEncontrada(true);
+          setCarregando(false);
+        }
+
         return;
       }
 
-      const dados = usuarioSnap.data();
+      try {
+        const uidLimpo = String(uid).trim();
 
-      console.log("Usuário encontrado:", dados);
-      console.log(
-        "Página de agendamento:",
-        dados.paginaAgendamento
-      );
+        console.log(
+          "========================================"
+        );
+        console.log("CARREGANDO PÁGINA PÚBLICA");
+        console.log("UID recebido pela URL:", uidLimpo);
+        console.log(
+          "========================================"
+        );
 
-      setDadosProfissional(dados);
-      setPagina(dados.paginaAgendamento || null);
+        // --------------------------------------------------------
+        // BUSCAR USUÁRIO
+        // --------------------------------------------------------
 
-    } catch (error) {
-      console.error(
-        "Erro ao carregar página:",
-        error
-      );
+        const usuarioRef = doc(
+          db,
+          "usuarios",
+          uidLimpo
+        );
 
-      setPagina(null);
-    } finally {
-      setCarregando(false);
-    }
-  };
+        const usuarioSnap = await getDoc(usuarioRef);
 
-  carregarPagina();
-}, [uid]);
+        console.log(
+          "Documento usuarios existe?",
+          usuarioSnap.exists()
+        );
+
+        if (!usuarioSnap.exists()) {
+          console.error(
+            "Usuário não encontrado no Firestore.",
+            {
+              uid: uidLimpo,
+            }
+          );
+
+          if (ativo) {
+            setDadosProfissional(null);
+            setPagina(null);
+            setPaginaNaoEncontrada(true);
+          }
+
+          return;
+        }
+
+        // --------------------------------------------------------
+        // DADOS DO USUÁRIO
+        // --------------------------------------------------------
+
+        const dados = usuarioSnap.data();
+
+        console.log(
+          "Dados do usuário encontrados:",
+          dados
+        );
+
+        console.log(
+          "paginaAgendamento:",
+          dados?.paginaAgendamento
+        );
+
+        // --------------------------------------------------------
+        // VERIFICAR SE A PÁGINA EXISTE
+        // --------------------------------------------------------
+
+        if (
+          !dados?.paginaAgendamento ||
+          typeof dados.paginaAgendamento !== "object"
+        ) {
+          console.error(
+            "Usuário encontrado, mas não possui página de agendamento configurada."
+          );
+
+          if (ativo) {
+            setDadosProfissional(dados);
+            setPagina(null);
+            setPaginaNaoEncontrada(true);
+          }
+
+          return;
+        }
+
+        // --------------------------------------------------------
+        // PÁGINA ENCONTRADA
+        // --------------------------------------------------------
+
+        if (ativo) {
+          setDadosProfissional(dados);
+          setPagina(dados.paginaAgendamento);
+          setPaginaNaoEncontrada(false);
+          setErroCarregamento(false);
+        }
+
+        console.log(
+          "Página pública carregada com sucesso."
+        );
+      } catch (error) {
+        console.error(
+          "Erro ao carregar página pública:",
+          error
+        );
+
+        if (ativo) {
+          setPagina(null);
+          setErroCarregamento(true);
+          setPaginaNaoEncontrada(false);
+        }
+      } finally {
+        if (ativo) {
+          setCarregando(false);
+        }
+      }
+    };
+
+    carregarPagina();
+
+    return () => {
+      ativo = false;
+    };
+  }, [uid]);
 
   // ============================================================
   // CARREGAR EQUIPE
@@ -159,10 +246,12 @@ console.log(
 
         const snapshot = await getDocs(q);
 
-        const lista = snapshot.docs.map((docSnapshot) => ({
-          id: docSnapshot.id,
-          ...docSnapshot.data(),
-        }));
+        const lista = snapshot.docs.map(
+          (docSnapshot) => ({
+            id: docSnapshot.id,
+            ...docSnapshot.data(),
+          })
+        );
 
         setMembrosEquipe(lista);
 
@@ -224,13 +313,14 @@ console.log(
 
   const gerarDatas = () => {
     const datas = [];
-
     const hoje = new Date();
 
     for (let i = 0; i < 7; i++) {
       const data = new Date(hoje);
 
-      data.setDate(hoje.getDate() + i);
+      data.setDate(
+        hoje.getDate() + i
+      );
 
       datas.push(data);
     }
@@ -330,7 +420,9 @@ console.log(
   // ============================================================
 
   const minutosParaHorario = (minutos) => {
-    const horas = Math.floor(minutos / 60);
+    const horas = Math.floor(
+      minutos / 60
+    );
 
     const minutosRestantes =
       minutos % 60;
@@ -360,22 +452,22 @@ console.log(
     }
 
     setCarregandoHorarios(true);
-
     setHorariosOcupados([]);
 
     try {
       const agendamentosRef =
-        collection(db, "agendamentos");
+        collection(
+          db,
+          "agendamentos"
+        );
 
       const q = query(
         agendamentosRef,
-
         where(
           "profissionalId",
           "==",
           profissionalSelecionado.id
         ),
-
         where(
           "data",
           "==",
@@ -383,49 +475,55 @@ console.log(
         )
       );
 
-      const snapshot = await getDocs(q);
+      const snapshot =
+        await getDocs(q);
 
       const ocupados = [];
 
-      snapshot.forEach((docSnapshot) => {
-        const agendamento =
-          docSnapshot.data();
+      snapshot.forEach(
+        (docSnapshot) => {
+          const agendamento =
+            docSnapshot.data();
 
-        if (
-          agendamento.status ===
-          "cancelado"
-        ) {
-          return;
-        }
+          if (
+            agendamento.status ===
+            "cancelado"
+          ) {
+            return;
+          }
 
-        if (!agendamento.horario) {
-          return;
-        }
+          if (!agendamento.horario) {
+            return;
+          }
 
-        const horarioInicial =
-          horarioParaMinutos(
-            agendamento.horario
+          const horarioInicial =
+            horarioParaMinutos(
+              agendamento.horario
+            );
+
+          const duracao = Number(
+            agendamento.servico
+              ?.duracao ||
+              agendamento.duracao ||
+              30
           );
 
-        const duracao = Number(
-          agendamento.servico?.duracao ||
-            agendamento.duracao ||
-            30
-        );
+          const horarioFinal =
+            horarioInicial + duracao;
 
-        const horarioFinal =
-          horarioInicial + duracao;
-
-        for (
-          let minuto = horarioInicial;
-          minuto < horarioFinal;
-          minuto += 30
-        ) {
-          ocupados.push(
-            minutosParaHorario(minuto)
-          );
+          for (
+            let minuto = horarioInicial;
+            minuto < horarioFinal;
+            minuto += 30
+          ) {
+            ocupados.push(
+              minutosParaHorario(
+                minuto
+              )
+            );
+          }
         }
-      });
+      );
 
       setHorariosOcupados(
         [...new Set(ocupados)]
@@ -448,15 +546,10 @@ console.log(
 
   const selecionarServico = (id) => {
     setServicoSelecionado(id);
-
     setDataSelecionada(null);
-
     setHorarioSelecionado(null);
-
     setHorariosOcupados([]);
-
     setMensagemErro("");
-
     setMensagemSucesso("");
   };
 
@@ -471,17 +564,10 @@ console.log(
       profissional
     );
 
-    // Quando muda o profissional,
-    // precisamos limpar data e horário.
-
     setDataSelecionada(null);
-
     setHorarioSelecionado(null);
-
     setHorariosOcupados([]);
-
     setMensagemErro("");
-
     setMensagemSucesso("");
   };
 
@@ -499,11 +585,8 @@ console.log(
     }
 
     setDataSelecionada(data);
-
     setHorarioSelecionado(null);
-
     setMensagemErro("");
-
     setMensagemSucesso("");
 
     await carregarHorariosOcupados(
@@ -515,7 +598,9 @@ console.log(
   // SELECIONAR HORÁRIO
   // ============================================================
 
-  const selecionarHorario = (horario) => {
+  const selecionarHorario = (
+    horario
+  ) => {
     if (
       horariosOcupados.includes(
         horario
@@ -529,7 +614,6 @@ console.log(
     );
 
     setMensagemErro("");
-
     setMensagemSucesso("");
   };
 
@@ -537,13 +621,14 @@ console.log(
   // ALTERAR NOME
   // ============================================================
 
-  const alterarNomeCliente = (event) => {
+  const alterarNomeCliente = (
+    event
+  ) => {
     setNomeCliente(
       event.target.value
     );
 
     setMensagemErro("");
-
     setMensagemSucesso("");
   };
 
@@ -564,7 +649,6 @@ console.log(
     );
 
     setMensagemErro("");
-
     setMensagemSucesso("");
   };
 
@@ -574,10 +658,6 @@ console.log(
 
   const confirmarAgendamento =
     async () => {
-      // --------------------------------------------------------
-      // VALIDAR PROFISSIONAL
-      // --------------------------------------------------------
-
       if (!profissionalSelecionado) {
         setMensagemErro(
           "Selecione o profissional que realizará o atendimento."
@@ -585,10 +665,6 @@ console.log(
 
         return;
       }
-
-      // --------------------------------------------------------
-      // VALIDAR SERVIÇO, DATA E HORÁRIO
-      // --------------------------------------------------------
 
       if (
         !servicoSelecionado ||
@@ -603,10 +679,6 @@ console.log(
 
         return;
       }
-
-      // --------------------------------------------------------
-      // VALIDAR NOME
-      // --------------------------------------------------------
 
       const nomeLimpo =
         nomeCliente.trim();
@@ -626,10 +698,6 @@ console.log(
 
         return;
       }
-
-      // --------------------------------------------------------
-      // VALIDAR TELEFONE
-      // --------------------------------------------------------
 
       const telefoneLimpo =
         telefoneCliente.replace(
@@ -656,26 +724,14 @@ console.log(
         return;
       }
 
-      setSalvandoAgendamento(
-        true
-      );
-
+      setSalvandoAgendamento(true);
       setMensagemErro("");
-
       setMensagemSucesso("");
 
       try {
-        // ------------------------------------------------------
-        // DURAÇÃO DO SERVIÇO
-        // ------------------------------------------------------
-
         const duracao = Number(
           servicoAtual.duracao || 30
         );
-
-        // ------------------------------------------------------
-        // CALCULAR HORÁRIOS OCUPADOS
-        // ------------------------------------------------------
 
         const inicio =
           horarioParaMinutos(
@@ -692,13 +748,11 @@ console.log(
           minuto += 30
         ) {
           horariosDoAgendamento.push(
-            minutosParaHorario(minuto)
+            minutosParaHorario(
+              minuto
+            )
           );
         }
-
-        // ------------------------------------------------------
-        // PROFISSIONAL SELECIONADO
-        // ------------------------------------------------------
 
         const profissionalId =
           profissionalSelecionado.id;
@@ -706,14 +760,6 @@ console.log(
         const profissionalNome =
           profissionalSelecionado.nome ||
           "Profissional";
-
-        // ------------------------------------------------------
-        // ID ÚNICO DO HORÁRIO
-        //
-        // IMPORTANTE:
-        // Agora o ID usa o profissional.
-        // Assim Ana às 14h é diferente de Maria às 14h.
-        // ------------------------------------------------------
 
         const agendamentoId =
           `${profissionalId}_${dataSelecionada}_${horarioSelecionado}`
@@ -729,19 +775,11 @@ console.log(
             agendamentoId
           );
 
-        // ------------------------------------------------------
-        // TRANSACTION
-        // ------------------------------------------------------
-
         await runTransaction(
           db,
           async (transaction) => {
             const documentosParaVerificar =
               [];
-
-            // ----------------------------------------------
-            // Verificar cada bloco de 30 minutos
-            // ----------------------------------------------
 
             for (
               const horario of
@@ -765,22 +803,15 @@ console.log(
               );
             }
 
-            // ----------------------------------------------
-            // Buscar documentos
-            // ----------------------------------------------
-
             const snapshots =
               await Promise.all(
                 documentosParaVerificar.map(
                   (ref) =>
-                    transaction.get(ref)
+                    transaction.get(
+                      ref
+                    )
                 )
               );
-
-            // ----------------------------------------------
-            // Verificar se algum horário
-            // já está ocupado
-            // ----------------------------------------------
 
             const algumOcupado =
               snapshots.some(
@@ -797,17 +828,9 @@ console.log(
               );
             }
 
-            // ----------------------------------------------
-            // SALVAR AGENDAMENTO
-            // ----------------------------------------------
-
             transaction.set(
               agendamentoRef,
               {
-                // ==========================================
-                // IDENTIFICAÇÃO
-                // ==========================================
-
                 profissionalId,
 
                 empresaId:
@@ -816,10 +839,6 @@ console.log(
 
                 gestorId: uid,
 
-                // ==========================================
-                // PROFISSIONAL
-                // ==========================================
-
                 profissional:
                   profissionalNome,
 
@@ -827,16 +846,13 @@ console.log(
                   profissionalNome,
 
                 profissionalCargo:
-                  profissionalSelecionado.cargo ||
-                  "",
+                  profissionalSelecionado
+                    .cargo || "",
 
                 profissionalCor:
-                  profissionalSelecionado.cor ||
+                  profissionalSelecionado
+                    .cor ||
                   "#4A6FFF",
-
-                // ==========================================
-                // CLIENTE
-                // ==========================================
 
                 clienteId: null,
 
@@ -846,18 +862,10 @@ console.log(
                 clienteTelefone:
                   telefoneCliente.trim(),
 
-                // Campos compatíveis
-                // com o calendário
-
-                cliente:
-                  nomeLimpo,
+                cliente: nomeLimpo,
 
                 telefone:
                   telefoneCliente.trim(),
-
-                // ==========================================
-                // SERVIÇO
-                // ==========================================
 
                 servico: {
                   id:
@@ -884,15 +892,9 @@ console.log(
                   servicoAtual.nome ||
                   "Serviço",
 
-                // Compatível com calendário
-
                 titulo:
                   servicoAtual.nome ||
                   "Serviço",
-
-                // ==========================================
-                // VALOR E DURAÇÃO
-                // ==========================================
 
                 valor: Number(
                   servicoAtual.valor ||
@@ -900,10 +902,6 @@ console.log(
                 ),
 
                 duracao,
-
-                // ==========================================
-                // DATA E HORÁRIO
-                // ==========================================
 
                 data:
                   dataSelecionada,
@@ -922,19 +920,11 @@ console.log(
                 horarios:
                   horariosDoAgendamento,
 
-                // ==========================================
-                // STATUS
-                // ==========================================
-
                 status:
                   "confirmado",
 
                 origem:
                   "pagina_publica",
-
-                // ==========================================
-                // DATAS
-                // ==========================================
 
                 criadoEm:
                   serverTimestamp(),
@@ -946,10 +936,6 @@ console.log(
           }
         );
 
-        // ------------------------------------------------------
-        // ATUALIZAR HORÁRIOS OCUPADOS
-        // ------------------------------------------------------
-
         setHorariosOcupados(
           (anteriores) => [
             ...new Set([
@@ -959,25 +945,12 @@ console.log(
           ]
         );
 
-        // ------------------------------------------------------
-        // LIMPAR HORÁRIO
-        // ------------------------------------------------------
-
         setHorarioSelecionado(
           null
         );
 
-        // ------------------------------------------------------
-        // LIMPAR DADOS DO CLIENTE
-        // ------------------------------------------------------
-
         setNomeCliente("");
-
         setTelefoneCliente("");
-
-        // ------------------------------------------------------
-        // SUCESSO
-        // ------------------------------------------------------
 
         setMensagemSucesso(
           `Agendamento confirmado com ${profissionalNome}! ${servicoAtual.nome} em ${dataSelecionada} às ${horarioSelecionado}.`
@@ -1048,10 +1021,49 @@ console.log(
   }
 
   // ============================================================
+  // ERRO DE CARREGAMENTO
+  // ============================================================
+
+  if (erroCarregamento) {
+    return (
+      <div style={styles.loadingPage}>
+        <div style={styles.loadingCard}>
+          <div style={styles.errorIcon}>
+            !
+          </div>
+
+          <h1 style={styles.notFoundTitle}>
+            Não foi possível carregar
+          </h1>
+
+          <p style={styles.notFoundText}>
+            Ocorreu um erro ao carregar esta
+            página de agendamento. Verifique
+            sua conexão e tente novamente.
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              window.location.reload()
+            }
+            style={styles.retryButton}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
   // PÁGINA NÃO ENCONTRADA
   // ============================================================
 
-  if (!pagina) {
+  if (
+    paginaNaoEncontrada ||
+    !pagina
+  ) {
     return (
       <div style={styles.loadingPage}>
         <div style={styles.loadingCard}>
@@ -1059,15 +1071,11 @@ console.log(
             !
           </div>
 
-          <h1
-            style={styles.notFoundTitle}
-          >
+          <h1 style={styles.notFoundTitle}>
             Página não encontrada
           </h1>
 
-          <p
-            style={styles.notFoundText}
-          >
+          <p style={styles.notFoundText}>
             Esta página de agendamento
             não existe ou ainda não foi
             configurada.
@@ -1124,9 +1132,7 @@ console.log(
             "Página de agendamento"}
         </h1>
 
-        <p
-          style={styles.description}
-        >
+        <p style={styles.description}>
           {pagina.descricao ||
             "Agende seu horário de forma rápida e fácil."}
         </p>
@@ -1142,9 +1148,7 @@ console.log(
         ==================================================== */}
 
         <section style={styles.section}>
-          <h2
-            style={styles.sectionTitle}
-          >
+          <h2 style={styles.sectionTitle}>
             Escolha um serviço
           </h2>
 
@@ -1167,7 +1171,9 @@ console.log(
               </div>
 
               <p
-                style={styles.emptyTitle}
+                style={
+                  styles.emptyTitle
+                }
               >
                 Nenhum serviço disponível
               </p>
@@ -1292,9 +1298,7 @@ console.log(
         ==================================================== */}
 
         <section style={styles.section}>
-          <h2
-            style={styles.sectionTitle}
-          >
+          <h2 style={styles.sectionTitle}>
             Escolha o profissional
           </h2>
 
@@ -1310,13 +1314,17 @@ console.log(
           {carregandoEquipe ? (
             <div style={styles.empty}>
               <div
-                style={styles.emptyEmoji}
+                style={
+                  styles.emptyEmoji
+                }
               >
                 ⏳
               </div>
 
               <p
-                style={styles.emptyTitle}
+                style={
+                  styles.emptyTitle
+                }
               >
                 Carregando profissionais...
               </p>
@@ -1328,16 +1336,21 @@ console.log(
                 profissionais disponíveis.
               </span>
             </div>
-          ) : membrosEquipe.length === 0 ? (
+          ) : membrosEquipe.length ===
+            0 ? (
             <div style={styles.empty}>
               <div
-                style={styles.emptyEmoji}
+                style={
+                  styles.emptyEmoji
+                }
               >
                 👤
               </div>
 
               <p
-                style={styles.emptyTitle}
+                style={
+                  styles.emptyTitle
+                }
               >
                 Nenhum profissional disponível
               </p>
@@ -1495,22 +1508,24 @@ console.log(
         ==================================================== */}
 
         <section style={styles.section}>
-          <h2
-            style={styles.sectionTitle}
-          >
+          <h2 style={styles.sectionTitle}>
             Escolha uma data
           </h2>
 
           {!profissionalSelecionado ? (
             <div style={styles.empty}>
               <div
-                style={styles.emptyEmoji}
+                style={
+                  styles.emptyEmoji
+                }
               >
                 👤
               </div>
 
               <p
-                style={styles.emptyTitle}
+                style={
+                  styles.emptyTitle
+                }
               >
                 Selecione um profissional
               </p>
@@ -1585,22 +1600,24 @@ console.log(
         ==================================================== */}
 
         <section style={styles.section}>
-          <h2
-            style={styles.sectionTitle}
-          >
+          <h2 style={styles.sectionTitle}>
             Escolha um horário
           </h2>
 
           {!profissionalSelecionado ? (
             <div style={styles.empty}>
               <div
-                style={styles.emptyEmoji}
+                style={
+                  styles.emptyEmoji
+                }
               >
                 👤
               </div>
 
               <p
-                style={styles.emptyTitle}
+                style={
+                  styles.emptyTitle
+                }
               >
                 Selecione um profissional
               </p>
@@ -1615,13 +1632,17 @@ console.log(
           ) : !servicoAtual ? (
             <div style={styles.empty}>
               <div
-                style={styles.emptyEmoji}
+                style={
+                  styles.emptyEmoji
+                }
               >
                 💇
               </div>
 
               <p
-                style={styles.emptyTitle}
+                style={
+                  styles.emptyTitle
+                }
               >
                 Selecione um serviço
               </p>
@@ -1636,13 +1657,17 @@ console.log(
           ) : !dataSelecionada ? (
             <div style={styles.empty}>
               <div
-                style={styles.emptyEmoji}
+                style={
+                  styles.emptyEmoji
+                }
               >
                 📅
               </div>
 
               <p
-                style={styles.emptyTitle}
+                style={
+                  styles.emptyTitle
+                }
               >
                 Selecione uma data
               </p>
@@ -1660,13 +1685,17 @@ console.log(
           ) : carregandoHorarios ? (
             <div style={styles.empty}>
               <div
-                style={styles.emptyEmoji}
+                style={
+                  styles.emptyEmoji
+                }
               >
                 ⏳
               </div>
 
               <p
-                style={styles.emptyTitle}
+                style={
+                  styles.emptyTitle
+                }
               >
                 Verificando horários...
               </p>
@@ -1780,8 +1809,6 @@ console.log(
                 confirmarmos seu agendamento.
               </p>
 
-              {/* PROFISSIONAL */}
-
               <div
                 style={
                   styles.appointmentProfessional
@@ -1819,8 +1846,6 @@ console.log(
                 </div>
               </div>
 
-              {/* NOME */}
-
               <div
                 style={
                   styles.inputGroup
@@ -1850,8 +1875,6 @@ console.log(
                   }
                 />
               </div>
-
-              {/* TELEFONE */}
 
               <div
                 style={
@@ -2012,6 +2035,7 @@ const styles = {
     textAlign: "center",
     boxShadow:
       "0 10px 30px rgba(0,0,0,0.08)",
+    boxSizing: "border-box",
   },
 
   spinner: {
@@ -2038,6 +2062,20 @@ const styles = {
     fontSize: "20px",
   },
 
+  errorIcon: {
+    width: "50px",
+    height: "50px",
+    margin: "0 auto 15px",
+    borderRadius: "50%",
+    backgroundColor: "#fef3c7",
+    color: "#d97706",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: 800,
+    fontSize: "20px",
+  },
+
   notFoundTitle: {
     margin: 0,
     fontSize: "20px",
@@ -2049,6 +2087,19 @@ const styles = {
     color: "#6b7280",
     fontSize: "13px",
     lineHeight: 1.5,
+  },
+
+  retryButton: {
+    marginTop: "18px",
+    width: "100%",
+    height: "44px",
+    border: "none",
+    borderRadius: "10px",
+    backgroundColor: "#4A6FFF",
+    color: "#ffffff",
+    fontSize: "13px",
+    fontWeight: 700,
+    cursor: "pointer",
   },
 
   header: {
@@ -2203,8 +2254,7 @@ const styles = {
   selectedProfessional: {
     marginTop: "12px",
     padding: "10px 12px",
-    border:
-      "1px solid",
+    border: "1px solid",
     borderRadius: "10px",
     display: "flex",
     alignItems: "center",
